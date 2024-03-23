@@ -18,7 +18,7 @@ func main() {
 	})
 	mux.HandleFunc("/users/new", users.CreateNewUser)
 	mux.HandleFunc("/users", users.GetUsers)
-	mux.HandleFunc("/passwords", passwords.GetPasswords)
+	mux.HandleFunc("/passwords/{id}", passwords.GetPasswords)
 	mux.HandleFunc("/passwords/new/{id}", passwords.NewPassword)
 	fmt.Print("server running on port ", 8080)
 
