@@ -17,16 +17,15 @@ func GetPasswords(w http.ResponseWriter, r *http.Request) {
 		if db == nil {
 			log.Fatal("oops there was ans error")
 		}
-		pathSegments := strings.Split(r.URL.Path, "/")
-		id := pathSegments[2]
+		token := r.Header.Get("ACCES_TOKEN")
 
-		idInt, err := strconv.Atoi(id)
+		userId, err := utils.VerifyToken(token)
 
 		if err != nil {
-			fmt.Println("falied to conver to nt")
+			fmt.Fprint(w, "failed to verify tokne")
 		}
 
-		var user = getUserByid(idInt, w)
+		var user = getUserByid(int(userId), w)
 
 		userInJson, err := json.Marshal(user)
 
