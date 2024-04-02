@@ -23,3 +23,35 @@ tmp/
 
 # Go workspace file
 go.work
+
+
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+kpass/node_modules
+kpass/.pnp
+kpass/.pnp.js
+kpass/# testing
+kpass/coverage
+kpass/#cache
+kpass/.turbo
+
+kpass/# misc
+kpass/.DS_Store
+kpass/*.pem
+kpass/# debug
+kpass/npm-debug.log*
+kpass/yarn-debug.log*
+kpass/yarn-error.log*
+kpass/.pnpm-debug.log*
+kpass/# local env files
+kpass/.env*
+kpass/out/
+kpass/build/
+kpass/dist/
+kpass/# plasmo - https://www.plasmo.com
+kpass/.plasmo
+kpass/# bpp - http://bpp.browser.market/
+kpass/keys.json
+kpass/# typescript
+kpass/.tsbuildinfo

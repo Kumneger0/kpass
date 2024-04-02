@@ -5,86 +5,142 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"server/routes/users"
 	"server/utils"
-	"strconv"
-	"strings"
 )
 
 func GetPasswords(w http.ResponseWriter, r *http.Request) {
-	if r.Method == "GET" {
-		db := utils.DB
+	db := utils.DB
 
-		if db == nil {
-			log.Fatal("oops there was ans error")
-		}
-		token := r.Header.Get("ACCES_TOKEN")
-
-		userId, err := utils.VerifyToken(token)
-
+	if db == nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		error := users.ERROR{Message: "internal server error"}
+		jsonData, err := json.Marshal(error)
 		if err != nil {
-			fmt.Fprint(w, "failed to verify tokne")
+
+			fmt.Println("oops there was ans error")
+
 		}
-
-		var user = getUserByid(int(userId), w)
-
-		userInJson, err := json.Marshal(user)
-
-		if err != nil {
-			fmt.Println("failed to marshl to json")
-		}
-
-		w.Write(userInJson)
+		w.Write(jsonData)
+		return
 	}
+	token := r.Header.Get("ACCESS_TOKEN")
+
+	userId, err := utils.VerifyToken(token)
+
+	if err != nil {
+		error := users.ERROR{Message: err.Error()}
+		jsonData, err := json.Marshal(error)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte("there was an error occured"))
+			return
+		}
+		w.Write(jsonData)
+		return
+	}
+
+	var user = getUserByid(int(userId), w)
+
+	userInJson, err := json.Marshal(user)
+
+	if err != nil {
+		error := users.ERROR{Message: err.Error()}
+		jsonData, err := json.Marshal(error)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte("there was an error occured"))
+			return
+		}
+		w.Write(jsonData)
+		return
+	}
+
+	w.Write(userInJson)
 
 }
 func NewPassword(w http.ResponseWriter, r *http.Request) {
-	if r.Method == "POST" {
 
-		db := utils.DB
+	db := utils.DB
 
-		if db == nil {
-			log.Fatal("oops there was ans error")
-		}
-		pathSegments := strings.Split(r.URL.Path, "/")
-
-		id := pathSegments[3]
-
-		idInt, err := strconv.Atoi(id)
-
+	if db == nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		error := users.ERROR{Message: "internal server error"}
+		jsonData, err := json.Marshal(error)
 		if err != nil {
-			fmt.Println("falied to conver to nt")
+			fmt.Println("oops there was ans error")
 		}
-
-		var user = getUserByid(idInt, w)
-
-		var password utils.Password
-
-		err = json.NewDecoder(r.Body).Decode(&password)
-		if err != nil {
-			log.Fatal("ther was an error", err)
-		}
-
-		if err != nil {
-			fmt.Println("failed to marshl")
-		}
-
-		user.Passwords = append(user.Passwords, password)
-
-		userInJson, err := json.Marshal(user)
-
-		if err != nil {
-			fmt.Println("failed to marshl to json")
-		}
-
-		result := db.Save(&user)
-
-		if result.Error != nil {
-			fmt.Println(result.Error.Error())
-		}
-
-		w.Write(userInJson)
-
+		w.Write(jsonData)
+		return
 	}
+
+	token := r.Header.Get("ACCESS_TOKEN")
+
+	userId, err := utils.VerifyToken(token)
+
+	if err != nil {
+		error := users.ERROR{Message: err.Error()}
+		jsonData, err := json.Marshal(error)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte("failed to add you password"))
+			return
+		}
+		w.Write(jsonData)
+		return
+	}
+
+	var user = getUserByid(int(userId), w)
+
+	var password utils.Password
+
+	if err = json.NewDecoder(r.Body).Decode(&password); err != nil {
+		error := users.ERROR{Message: err.Error()}
+
+		jsonData, err := json.Marshal(error)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte("failed to add you password"))
+			return
+		}
+		w.Write(jsonData)
+		return
+	}
+
+	user.Passwords = append(user.Passwords, password)
+
+	userInJson, err := json.Marshal(user)
+
+	if err != nil {
+		error := users.ERROR{Message: err.Error()}
+		w.WriteHeader(http.StatusInternalServerError)
+
+		jsonData, err := json.Marshal(error)
+		if err != nil {
+			w.Write([]byte(err.Error()))
+			return
+		}
+		w.Write(jsonData)
+		return
+	}
+
+	result := db.Save(&user)
+
+	if result.Error != nil {
+		fmt.Println(result.Error.Error())
+		error := users.ERROR{Message: result.Error.Error()}
+
+		jsonData, err := json.Marshal(error)
+		if err != nil {
+			w.Write([]byte(err.Error()))
+			return
+		}
+		w.Write(jsonData)
+		return
+	}
+
+	w.Write(userInJson)
+
 }
 
 func getUserByid(id int, w http.ResponseWriter) utils.User {

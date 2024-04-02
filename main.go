@@ -9,6 +9,7 @@ import (
 	"server/routes/users"
 
 	"github.com/joho/godotenv"
+	"github.com/rs/cors"
 )
 
 func main() {
@@ -23,18 +24,20 @@ func main() {
 	fmt.Printf("JWT_SECRET, %s", JWT_SECRET)
 
 	mux := http.NewServeMux()
+	mux.HandleFunc("POST /users/new", users.SingUp)
+	mux.HandleFunc("POST /users/login", users.LoginIn)
+	mux.HandleFunc("GET /users", users.GetUsers)
+	mux.HandleFunc("GET /passwords", passwords.GetPasswords)
+	mux.HandleFunc("POST /passwords/new", passwords.NewPassword)
+	fmt.Println("server running on port ", 8080)
 
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 
-		fmt.Fprintf(w, "Home route")
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("404 page not found"))
 	})
-	mux.HandleFunc("/users/new", users.SingUp)
-	mux.HandleFunc("/users/login", users.LoginIn)
-	mux.HandleFunc("/users", users.GetUsers)
-	mux.HandleFunc("/passwords", passwords.GetPasswords)
-	mux.HandleFunc("/passwords/new/{id}", passwords.NewPassword)
-	fmt.Println("server running on port ", 8080)
 
-	log.Fatal(http.ListenAndServe(":8080", mux))
+	handler := cors.AllowAll().Handler(mux)
+	log.Fatal(http.ListenAndServe(":8080", handler))
 
 }

@@ -15,8 +15,8 @@ import (
 type User struct {
 	gorm.Model
 	Username       string         `json:"username"  gorm:"uniqueIndex"`
-	FirstName      string         `json:"firstname"`
-	LastName       string         `json:"lastname"`
+	FirstName      string         `json:"firstName"`
+	LastName       string         `json:"lastName"`
 	Email          string         `json:"email" gorm:"uniqueIndex"`
 	MasterPassword string         `json:"masterPassword"`
 	Passwords      []Password     `gorm:"foreignKey:UserID"`
@@ -35,7 +35,6 @@ type Password struct {
 }
 
 func ConnectToDB() (*gorm.DB, error) {
-	// dsn := "postgresql://kumnegerwondimu:Y0SFQawkDP5f@ep-small-morning-a5wckwsq-pooler.us-east-2.aws.neon.tech/kumneger?sslmode=require"
 
 	dsn := "postgresql://postgres:12345678@localhost:5432/postgres"
 
@@ -46,9 +45,7 @@ func ConnectToDB() (*gorm.DB, error) {
 
 	fmt.Println("connected to postgres database")
 
-	err = db.AutoMigrate(&User{}, Password{})
-
-	if err != nil {
+	if err = db.AutoMigrate(&User{}, Password{}); err != nil {
 		fmt.Println("failed to migrate")
 	}
 
