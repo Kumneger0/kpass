@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState } from "react"
+import React, { createContext, useContext, useEffect, useState } from "react"
 
-import { loginSchema, signupSchema, userStore } from "./utils"
+import { loginSchema, signupSchema, userStore, type User } from "./utils"
 
 import "./style.css"
 
@@ -35,13 +35,30 @@ export default App
 
 function IndexPopup() {
   const user = userStore((state) => state.user)
+  const updateUser = userStore((state) => state.setUser)
   const accessToken = userStore((state) => state.accessToken)
   const { isLogin } = useContext(LoginContext)
 
-  if (!!accessToken) return <div>user is logged in</div>
+  useEffect(() => {
+    const url = `${BASEURL}/passwords`
+    const getUserData = async () => {
+      const response = await fetch(url, {
+        headers: {
+          ACCESS_TOKEN: accessToken
+        }
+      })
+      if (response.ok) {
+        const data = (await response?.json()) as User
+        updateUser(data)
+      }
+    }
+    if (accessToken) getUserData()
+  }, [accessToken])
 
-  // if (isLogin)
-  return <Login />
+  if (!!accessToken)
+    return <div>{user ? JSON?.stringify(user) : "logged in"}</div>
+
+  if (isLogin) return <Login />
 
   return <SignUP />
 }
@@ -247,7 +264,7 @@ function SignUP() {
                 Create an account
               </button>
               <p className="text-sm font-light text-gray-500 dark:text-gray-400">
-                Already have an account?{" "}
+                Already have an account?
                 <a
                   href="#"
                   className="font-medium text-primary-600 hover:underline dark:text-primary-500">
@@ -304,6 +321,7 @@ function Login() {
       const result = await LoginUser(data)
       if (result?.status === "success") {
         updateAccessToken(result?.data.accessToken)
+        localStorage.setItem("accessToken", result?.data.accessToken)
         return
       }
       setIsError(result?.data.message)

@@ -3,7 +3,7 @@ import { create } from "zustand"
 
 type AccessToken = string | null
 
-interface Password {
+export interface Password {
   id: number
   sitename: string
   url: string
@@ -65,7 +65,7 @@ type UserStore = {
 
 export const userStore = create<UserStore>((set) => ({
   user: null,
-  accessToken: null,
+  accessToken: localStorage.getItem("accessToken") || null,
   setUser: (user: User | null) => set(() => ({ user })),
   setAccessToken: (accessToken: AccessToken) => set(() => ({ accessToken }))
 }))
