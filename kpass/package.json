@@ -1,0 +1,45 @@
+{
+  "name": "kpass",
+  "displayName": "Kpass",
+  "version": "0.0.1",
+  "description": "privacy first password manager",
+  "author": "kumnegerwondimu",
+  "scripts": {
+    "dev": "plasmo dev",
+    "build": "plasmo build",
+    "package": "plasmo package"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.28.14",
+    "plasmo": "0.85.2",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "zod": "^3.22.4",
+    "zustand": "^4.5.2"
+  },
+  "devDependencies": {
+    "@ianvs/prettier-plugin-sort-imports": "4.1.1",
+    "@types/chrome": "0.0.258",
+    "@types/node": "20.11.5",
+    "@types/react": "18.2.48",
+    "@types/react-dom": "18.2.18",
+    "autoprefixer": "^10.4.19",
+    "postcss": "^8.4.38",
+    "prettier": "3.2.4",
+    "tailwindcss": "^3.4.3",
+    "typescript": "5.3.3"
+  },
+  "manifest": {
+    "host_permissions": [
+      "https://*/*"
+    ],
+    "permissions": [
+      "tabs"
+    ]
+  },
+  "pnpm": {
+    "overrides": {
+      "msgpackr@<1.10.1": ">=1.10.1"
+    }
+  }
+}
