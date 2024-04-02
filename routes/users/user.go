@@ -12,11 +12,11 @@ import (
 )
 
 type USERTOKEN struct {
-	ACCCESTOKEN string
+	ACCESS_TOKEN string `json:"accessToken"`
 }
 
 type ERROR struct {
-	Message string
+	Message string `json:"message"`
 }
 
 func GetUsers(w http.ResponseWriter, r *http.Request) {
@@ -123,7 +123,7 @@ func LoginIn(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		userToken := USERTOKEN{ACCCESTOKEN: token}
+		userToken := USERTOKEN{ACCESS_TOKEN: token}
 
 		userTokenJSON, err := json.Marshal(userToken)
 		if err != nil {
@@ -135,7 +135,15 @@ func LoginIn(w http.ResponseWriter, r *http.Request) {
 
 		return
 	}
-	fmt.Fprint(w, "password not match")
+	errorMessage := ERROR{Message: "password not match"}
+	w.WriteHeader(http.StatusUnauthorized)
+
+	jsonData, err := json.Marshal(errorMessage)
+	if err != nil {
+		w.Write(jsonData)
+
+	}
+	w.Write(jsonData)
 }
 
 func hashPassword(password string) (string, error) {

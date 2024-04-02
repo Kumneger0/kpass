@@ -18,9 +18,23 @@ const passwordRegExp =
 const emailRegExp = /[A-Z0-9._%+-]+@[A-Z0-9-]+.+.[A-Z]{2,4}/gim
 
 export const signupSchema = z.object({
-  username: z.string().min(5).max(20),
-  firstName: z.string().min(2).max(20),
-  lastName: z.string().min(2).max(20),
+  username: z
+    .string()
+    .min(5, { message: "username should be at least 5 charaters" })
+    .max(20, { message: "username should not exced 20 charaters" }),
+  firstName: z
+    .string()
+    .min(2, { message: "firstname  should be at least 2 charaters" })
+    .max(20, {
+      message: "first should not exced 20 charaters"
+    }),
+
+  lastName: z
+    .string()
+    .min(2, { message: "lastname  should be at least 2 charaters" })
+    .max(20, {
+      message: "lastname should not exced 20 charaters"
+    }),
   email: z.string().email().regex(emailRegExp, { message: "Invalid email" }),
   masterPassword: z
     .string()
@@ -28,8 +42,13 @@ export const signupSchema = z.object({
       message:
         "A password must contain at least one lowercase letter, one uppercase letter, one digit, one special character  be between 6 and 20 characters in length"
     })
-    .min(8)
+    .min(6)
     .max(20)
+})
+
+export const loginSchema = z.object({
+  email: z.string().email().regex(emailRegExp, { message: "Invalid email" }),
+  masterPassword: z.string().min(6).max(20)
 })
 
 export interface User
