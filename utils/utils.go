@@ -19,7 +19,7 @@ type User struct {
 	LastName       string         `json:"lastName"`
 	Email          string         `json:"email" gorm:"uniqueIndex"`
 	MasterPassword string         `json:"masterPassword"`
-	Passwords      []Password     `gorm:"foreignKey:UserID"`
+	Passwords      []Password     `json:"passwords" gorm:"foreignKey:UserID"`
 	DeletedAt      gorm.DeletedAt `gorm:"index"`
 }
 
