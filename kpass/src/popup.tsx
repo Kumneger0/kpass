@@ -56,7 +56,9 @@ function IndexPopup() {
   }, [accessToken])
 
   if (!!accessToken)
-    return <div>{user ? JSON?.stringify(user) : "logged in"}</div>
+    return <div>{user ? <div>
+      <a href = "/tabs/home.html" target="_blank">home</a>
+    </div> : "logged in"}</div>
 
   if (isLogin) return <Login />
 

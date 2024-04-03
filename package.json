@@ -1,5 +1,5 @@
 {
 	"dependencies": {
-		"react-hook-form": "^7.51.2"
+		"clsx": "^2.1.0"
 	}
 }

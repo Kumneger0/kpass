@@ -25,7 +25,7 @@ type User struct {
 
 type Password struct {
 	gorm.Model
-	SiteName    string         `json:"sitename"`
+	Username    string         `json:"username" `
 	Url         string         `json:"url"`
 	Email       string         `json:"email"`
 	PhoneNumber string         `json:"phone number"`
