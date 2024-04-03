@@ -1,28 +1,66 @@
-import { passwordSchema, userStore } from "~utils"
+import { passwordSchema, userStore, type User } from "~utils"
 
 import { Button } from "../components/button"
 
 import "../style.css"
 
+import {
+  QueryClient,
+  QueryClientProvider,
+  useMutation,
+  useQuery,
+  useQueryClient
+} from "@tanstack/react-query"
 import React, { useState } from "react"
-import { ZodError } from "zod"
+import { z, ZodError } from "zod"
 
 import { Dialog, DialogContent, DialogTrigger } from "../components/dialog"
+
+const queryClient = new QueryClient()
 
 const Home = () => {
   return (
     <div>
-      <Component />
+      <QueryClientProvider client={queryClient}>
+        <Component />
+      </QueryClientProvider>
     </div>
   )
 }
 
 export default Home
 
+const BASEURL = "http://localhost:8080"
+
+const getUserData = async (accessToken: string) => {
+  const url = `${BASEURL}/passwords`
+
+  const response = await fetch(url, {
+    headers: {
+      ACCESS_TOKEN: accessToken
+    }
+  })
+  const data = (await response?.json()) as User
+  return data
+}
+
 function Component() {
-  const user = userStore((state) => state.user)
-  const updateUser = userStore((state) => state.setUser)
   const accessToken = userStore((state) => state.accessToken)
+
+  const {
+    isPending,
+    error,
+    data: user
+  } = useQuery({
+    queryKey: ["repoData"],
+    queryFn: () => getUserData(accessToken)
+  })
+
+  console.log(user)
+
+  if (isPending) return "Loading..."
+
+  if (error) return "An error has occurred: " + error.message
 
   return (
     <div className="grid md:grid-cols-2 gap-4 items-start max-w-3xl mx-auto px-4">
@@ -181,9 +219,45 @@ export function DialogDemo() {
   )
 }
 
+const saveNewPassword = async (
+  data: z.infer<typeof passwordSchema>,
+  accessToken: string
+) => {
+  const res = await fetch(`${BASEURL}/passwords/new`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ACCESS_TOKEN: accessToken
+    },
+    body: JSON.stringify(data)
+  })
+  const json = await res.json()
+  return json
+}
+
 function AddPassword() {
   const [testData, setTestData] = useState("")
-  const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const accessToken = userStore((state) => state.accessToken)
+
+  const queryClient = useQueryClient()
+
+  const { isPending, data, isError, mutateAsync } = useMutation({
+    onSuccess: () => {
+      queryClient.invalidateQueries()
+    },
+    mutationKey: ["addPass"],
+    mutationFn: ({
+      data,
+      accessToken
+    }: {
+      data: z.infer<typeof passwordSchema>
+      accessToken: string
+    }) => {
+      return saveNewPassword(data, accessToken)
+    }
+  })
+
+  const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const formData = new FormData(e.currentTarget)
     console.log(formData.entries())
@@ -197,6 +271,12 @@ function AddPassword() {
 
     try {
       const parsedUserCreditial = passwordSchema.parse(data)
+
+      const result = await mutateAsync({
+        data: parsedUserCreditial,
+        accessToken
+      })
+
       setTestData(JSON.stringify(parsedUserCreditial, null, 2))
     } catch (err) {
       console.error(err)

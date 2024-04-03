@@ -4,7 +4,15 @@ import { loginSchema, signupSchema, userStore, type User } from "./utils"
 
 import "./style.css"
 
-import { z } from "zod"
+import {
+  QueryClient,
+  QueryClientProvider,
+  useMutation,
+  useQueryClient
+} from "@tanstack/react-query"
+import { set, z } from "zod"
+
+import { Button } from "~components/button"
 
 const BASEURL = "http://localhost:8080"
 
@@ -13,20 +21,24 @@ const LoginContext = createContext<{
   setIsLogin: React.Dispatch<React.SetStateAction<boolean>>
 }>(null)
 
+const queryClient = new QueryClient()
+
 const App = () => {
   const [isLogin, setIsLogin] = useState(false)
 
   return (
     <LoginContext.Provider value={{ isLogin, setIsLogin }}>
-      <div className="w-96 mx-auto">
-        <h3 className="font-bold text-2xl my-2 p-3">
-          KPass Privicy first password manager{" "}
-        </h3>
-        <IndexPopup />
-        <footer className="font-bold text-center my-3 p-3 text-lg">
-          Kpass 2024
-        </footer>
-      </div>
+      <QueryClientProvider client={queryClient}>
+        <div className="w-96 mx-auto">
+          <h3 className="font-bold text-2xl my-2 p-3">
+            KPass Privicy first password manager{" "}
+          </h3>
+          <IndexPopup />
+          <footer className="font-bold text-center my-3 p-3 text-lg">
+            Kpass 2024
+          </footer>
+        </div>
+      </QueryClientProvider>
     </LoginContext.Provider>
   )
 }
@@ -34,31 +46,33 @@ const App = () => {
 export default App
 
 function IndexPopup() {
-  const user = userStore((state) => state.user)
-  const updateUser = userStore((state) => state.setUser)
   const accessToken = userStore((state) => state.accessToken)
+  const updateAccessToken = userStore((state) => state.setAccessToken)
   const { isLogin } = useContext(LoginContext)
 
-  useEffect(() => {
-    const url = `${BASEURL}/passwords`
-    const getUserData = async () => {
-      const response = await fetch(url, {
-        headers: {
-          ACCESS_TOKEN: accessToken
-        }
-      })
-      if (response.ok) {
-        const data = (await response?.json()) as User
-        updateUser(data)
-      }
-    }
-    if (accessToken) getUserData()
-  }, [accessToken])
-
   if (!!accessToken)
-    return <div>{user ? <div>
-      <a href = "/tabs/home.html" target="_blank">home</a>
-    </div> : "logged in"}</div>
+    return (
+      <div className="w-full max-w-sm p-4 bg-white">
+        <div className="flex items-center justify-end mt-10">
+          {" "}
+          {accessToken && (
+            <Button
+              onClick={() => {
+                localStorage.removeItem("accessToken")
+                updateAccessToken(null)
+              }}
+              variant="destructive">
+              Logout
+            </Button>
+          )}
+        </div>
+        <div className="flex items-center justify-center mt-10">
+          <a href="/tabs/home.html" target="_blank">
+            <Button variant="link">Dashbord</Button>
+          </a>
+        </div>
+      </div>
+    )
 
   if (isLogin) return <Login />
 
@@ -94,6 +108,18 @@ function SignUP() {
   const [isLoading, setIsLoading] = React.useState(false)
   const [showPassWord, setShowPassword] = React.useState(false)
 
+  const queryClient = useQueryClient()
+
+  const { isPending, mutateAsync } = useMutation({
+    onSuccess: () => {
+      queryClient.invalidateQueries()
+    },
+    mutationKey: ["signup"],
+    mutationFn: (data: z.infer<typeof signupSchema>) => {
+      return registerUser(data)
+    }
+  })
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setIsLoading(true)
@@ -108,7 +134,7 @@ function SignUP() {
 
     try {
       const data = signupSchema.parse(body)
-      const result = await registerUser(data)
+      const result = await mutateAsync(data)
       if (result?.status === "success") {
         setIsLogin(true)
         return
@@ -261,17 +287,18 @@ function SignUP() {
                 </div>
               </div>
               <button
+                disabled={isPending}
                 type="submit"
-                className="w-full text-black bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800">
-                Create an account
+                className={`w-full text-black bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800 ${isPending ? "opacity-50" : ""}`}>
+                {isPending ? "..." : "Create an account"}
               </button>
               <p className="text-sm font-light text-gray-500 dark:text-gray-400">
                 Already have an account?
-                <a
-                  href="#"
+                <Button
+                  onClick={() => setIsLogin(true)}
                   className="font-medium text-primary-600 hover:underline dark:text-primary-500">
                   Login here
-                </a>
+                </Button>
               </p>
             </form>
           </div>
@@ -307,7 +334,19 @@ function Login() {
   const updateAccessToken = userStore((state) => state.setAccessToken)
   const [error, setIsError] = React.useState<string | null>(null)
   const [isLoading, setIsLoading] = React.useState(false)
-  const [showPassWord, setShowPassword] = React.useState(false)
+  const { setIsLogin } = useContext(LoginContext)
+
+  const queryClient = useQueryClient()
+
+  const { isPending, mutateAsync } = useMutation({
+    onSuccess: () => {
+      queryClient.invalidateQueries()
+    },
+    mutationKey: ["signup"],
+    mutationFn: (data: z.infer<typeof signupSchema>) => {
+      return LoginUser(data)
+    }
+  })
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -320,7 +359,7 @@ function Login() {
 
     try {
       const data = loginSchema.parse(body)
-      const result = await LoginUser(data)
+      const result = await mutateAsync(data)
       if (result?.status === "success") {
         updateAccessToken(result?.data.accessToken)
         localStorage.setItem("accessToken", result?.data.accessToken)
@@ -385,17 +424,18 @@ function Login() {
             />
           </div>
           <button
+            disabled={isPending}
             type="submit"
-            className="w-full text-black bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800">
-            login
+            className={`w-full text-black bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800  ${isPending ? "opacity-50" : ""}`}>
+            {isPending ? "..." : "Login"}
           </button>
           <p className="text-sm font-light text-gray-500 dark:text-gray-400">
             new to kpass ?{" "}
-            <a
-              href="#"
+            <Button
+              onClick={() => setIsLogin(false)}
               className="font-medium text-primary-600 hover:underline dark:text-primary-500">
               sign up here
-            </a>
+            </Button>
           </p>
         </form>
       </div>
