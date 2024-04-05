@@ -28,7 +28,7 @@ type Password struct {
 	Username    string         `json:"username" `
 	Url         string         `json:"url"`
 	Email       string         `json:"email"`
-	PhoneNumber string         `json:"phone number"`
+	PhoneNumber string         `json:"phoneNumber"`
 	Password    string         `json:"password"`
 	UserID      uint           `gorm:"column:user_id"`
 	DeletedAt   gorm.DeletedAt `gorm:"index"`

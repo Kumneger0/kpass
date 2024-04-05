@@ -29,6 +29,7 @@ func main() {
 	mux.HandleFunc("GET /users", users.GetUsers)
 	mux.HandleFunc("GET /passwords", passwords.GetPasswords)
 	mux.HandleFunc("POST /passwords/new", passwords.NewPassword)
+	mux.HandleFunc("PUT /passwords/update/{id}", passwords.UpdatePassword)
 	fmt.Println("server running on port ", 8080)
 
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
