@@ -1,4 +1,4 @@
-import { passwordSchema, userStore, type User } from "~utils"
+import { passwordSchema, userStore, type AccessToken, type User } from "~utils"
 
 import { Button } from "../components/button"
 
@@ -34,8 +34,10 @@ export default Home
 
 const BASEURL = "http://localhost:8080"
 
-export const getUserData = async (accessToken: string) => {
+export const getUserData = async (accessToken: string | null) => {
 	const url = `${BASEURL}/passwords`
+
+	if (!accessToken) throw Error("please specify access token")
 
 	const response = await fetch(url, {
 		headers: {
@@ -92,7 +94,7 @@ function Component() {
 				<div className="overflow-hidden border border-gray-200 dark:border-gray-800 rounded-lg">
 					<div className="grid grid-cols-4 border-b border-gray-200 dark:border-gray-800 p-4">
 						<div className="font-semibold">Website</div>
-						<div className="font-semibold">Username</div>
+						<div className="font-semibold">Username / Email</div>
 						<div className="font-semibold">Password</div>
 						<div className="font-semibold text-right">Actions</div>
 					</div>
@@ -114,7 +116,7 @@ function EachPassWord({
 	phoneNumber = "",
 	username = "",
 	ID: id
-}: z.infer<typeof passwordSchema> & { ID: string }) {
+}: Partial<z.infer<typeof passwordSchema> & { ID: string | undefined }>) {
 	const [isEdit, setIsEdit] = useState(false)
 	const formRef = useRef<HTMLFormElement>(null)
 	const accessToken = userStore(({ accessToken }) => accessToken)
@@ -160,8 +162,9 @@ function EachPassWord({
 
 	const handleEditPassword = (e: React.MouseEvent) => {
 		e.preventDefault()
+		if (!formRef.current) throw Error("formRef is undefined")
 		const formData = new FormData(formRef.current)
-		const passwordToUpate: z.infer<typeof passwordSchema> = {
+		const passwordToUpate: Partial<z.infer<typeof passwordSchema>> = {
 			email: formData.get("email") as string,
 			password: formData.get("password") as string,
 			phoneNumber,
@@ -171,11 +174,16 @@ function EachPassWord({
 
 		try {
 			const result = passwordSchema.parse(passwordToUpate)
+			if (!accessToken) throw Error("Access token is missing")
+			if (!id) throw Error("password is missing")
 			mutate({ accessToken, body: result, id })
 		} catch (err) {
 			console.error(err)
 		}
 	}
+
+	if (!accessToken) return <div>Access Token is Missing</div>
+	if (!id) return <div>id is Missing</div>
 
 	return (
 		<form
@@ -226,6 +234,7 @@ function EachPassWord({
 						<button
 							onClick={(e) => {
 								e.preventDefault()
+
 								deletePass({ accessToken, id })
 							}}
 							type="button"
@@ -239,7 +248,7 @@ function EachPassWord({
 	)
 }
 
-function PlusIcon(props) {
+function PlusIcon<T>(props: T) {
 	return (
 		<svg
 			{...props}
@@ -258,7 +267,7 @@ function PlusIcon(props) {
 	)
 }
 
-function SearchIcon(props) {
+function SearchIcon<T>(props: T) {
 	return (
 		<svg
 			{...props}
@@ -294,9 +303,10 @@ export function DialogDemo() {
 }
 
 export const saveNewPassword = async (
-	data: z.infer<typeof passwordSchema>,
-	accessToken: string
+	data: Partial<z.infer<typeof passwordSchema>>,
+	accessToken: AccessToken
 ) => {
+	if (!accessToken) throw Error("Access Token is requied to save the passowrd")
 	const res = await fetch(`${BASEURL}/passwords/new`, {
 		method: "POST",
 		headers: {
@@ -325,7 +335,7 @@ function AddPassword() {
 			accessToken
 		}: {
 			data: z.infer<typeof passwordSchema>
-			accessToken: string
+			accessToken: AccessToken
 		}) => {
 			return saveNewPassword(data, accessToken)
 		}
@@ -369,36 +379,6 @@ function AddPassword() {
 			<form onSubmit={handleFormSubmit} className="max-w-sm mx-auto">
 				<div className="mb-5">
 					<label
-						htmlFor="email"
-						className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-						Your email
-					</label>
-					<input
-						type="email"
-						name="email"
-						id="email"
-						className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-						placeholder="email"
-						required
-					/>
-				</div>
-				<div className="mb-5">
-					<label
-						htmlFor="email"
-						className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-						Your phoneNumber
-					</label>
-					<input
-						type="tel"
-						name="phoneNumber"
-						id="phoneNumber"
-						className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-						placeholder="+1234567890"
-						required
-					/>
-				</div>
-				<div className="mb-5">
-					<label
 						htmlFor="site"
 						className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
 						site
@@ -414,16 +394,16 @@ function AddPassword() {
 				</div>
 				<div className="mb-5">
 					<label
-						htmlFor="username"
+						htmlFor="email"
 						className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-						username
+						Your email
 					</label>
 					<input
-						type="text"
-						id="username"
-						name="username"
+						type="email"
+						name="email"
+						id="email"
 						className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-						placeholder="username"
+						placeholder="email"
 						required
 					/>
 				</div>

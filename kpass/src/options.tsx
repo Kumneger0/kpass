@@ -10,7 +10,7 @@ import { date, type TypeOf, type z } from "zod"
 import { Button } from "~components/button"
 
 import { getUserData, saveNewPassword } from "./tabs/home"
-import { passwordSchema, userStore, type User } from "./utils"
+import { passwordSchema, userStore, type AccessToken, type Password, type User } from "./utils"
 
 const queryClient = new QueryClient()
 
@@ -26,12 +26,12 @@ const App = () => {
 export default App
 
 export type UpdateParams = {
-	accessToken: string
+	accessToken: AccessToken
 	id: string | number
 	body: z.infer<typeof passwordSchema>
 }
 export const updatePassword = async ({ accessToken, id, body }: UpdateParams) => {
-	if (!id) throw Error("id is required to update")
+	if (!id || !accessToken) throw Error("id is required to update")
 	const url = `${BASEURL}/passwords/update/${id}`
 
 	const response = await fetch(url, {
@@ -44,8 +44,14 @@ export const updatePassword = async ({ accessToken, id, body }: UpdateParams) =>
 	const data = (await response?.json()) as User
 	return data
 }
+
+async function onMutaionSuccess() {
+	window.close()
+	await storage.remove("credential")
+}
+
 export const deletePassword = async ({ accessToken, id }: Omit<UpdateParams, "body">) => {
-	if (!id) throw Error("id is required to delete")
+	if (!id || !accessToken) throw Error("id is required to delete")
 	alert(id)
 	const url = `${BASEURL}/passwords/delete/${id}`
 
@@ -62,7 +68,7 @@ export const deletePassword = async ({ accessToken, id }: Omit<UpdateParams, "bo
 
 function IndexOptions() {
 	const accessToken = userStore((state) => state.accessToken)
-	const [selectedId, setSelectedId] = useState<string | number | null>(null)
+	const [selectedId, setSelectedId] = useState<string | number | null | undefined>(null)
 
 	const {
 		isPending,
@@ -80,9 +86,9 @@ function IndexOptions() {
 	} = useQuery({
 		queryKey: ["getCredetialToSave"],
 		queryFn: async () =>
-			(await storage.get("credential")) as Awaited<
-				ReturnType<typeof getUserData>
-			>["passwords"][number]
+			(await storage.get("credential")) as NonNullable<
+				Awaited<ReturnType<typeof getUserData>>["passwords"][number]
+			>
 	})
 
 	const {
@@ -94,27 +100,18 @@ function IndexOptions() {
 	} = useMutation({
 		mutationKey: ["updatePassword"],
 		mutationFn: (arg: UpdateParams) => updatePassword(arg),
-		onSuccess(data, variables, context) {
-			window.close()
-		},
-		onError(error, variables, context) {
-			alert("oops failed to save the password")
-		}
+		onSuccess: onMutaionSuccess,
+		onError: console.error
 	})
 	const {
 		isPending: isCreatePending,
 		isError: isCreateError,
-
 		mutateAsync
 	} = useMutation({
 		mutationKey: ["savePassword"],
-		mutationFn: () => saveNewPassword(credential, accessToken),
-		onSuccess(data, variables, context) {
-			window.close()
-		},
-		onError(error, variables, context) {
-			alert("oops failed to save the password")
-		}
+		mutationFn: () => saveNewPassword(credential as Password, accessToken as string),
+		onSuccess: onMutaionSuccess,
+		onError: console.error
 	})
 
 	if (isPending || isCredeitialPending) return <div>please wait</div>
@@ -162,7 +159,7 @@ function IndexOptions() {
 						key={key}
 						className="flex justify-between items-center border-b border-gray-200 py-2">
 						<div>{key}</div>
-						<div>{credential[key]}</div>
+						<div>{credential[key as keyof typeof credential]}</div>
 					</div>
 				))}
 			</div>
@@ -177,13 +174,7 @@ function IndexOptions() {
 				</div>
 				<div className="mr-2">
 					<Button
-						onClick={async () => {
-							try {
-								await mutateAsync()
-							} catch (err) {
-								console.error(err)
-							}
-						}}
+						onClick={async () => await mutateAsync({})}
 						variant="default"
 						className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
 						save as new
@@ -200,7 +191,6 @@ function IndexOptions() {
 										accessToken: accessToken,
 										body: credential
 									})
-									return
 								}
 							}}
 							className={`bg-green-500 p-2  text-white font-bold py-2 px-4 rounded ${!selectedId ? "opacity-50 cursor-not-allowed" : "hover:bg-green-700"}`}>

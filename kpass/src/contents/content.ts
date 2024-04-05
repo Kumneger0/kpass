@@ -1,4 +1,4 @@
-import { ZodError } from "zod"
+import { object, string, ZodError } from "zod"
 
 import { storage } from "~popup"
 import { passwordSchema } from "~utils"
@@ -22,21 +22,31 @@ const getInputElements = () => {
 			crendentials.password = elem.value
 			return
 		}
-		crendentials[elem.name] = elem.value
+		const name = elem.name
+		const keys = Object.keys(crendentials).map((str) => str.toLowerCase())
+		if (keys.includes(name.toLowerCase())) {
+			crendentials[name as keyof typeof crendentials] = elem.value
+		}
 	})
 	return crendentials
+}
+
+function isInKey<Tobj extends object>(obj: Tobj, key: PropertyKey): key is keyof Tobj {
+	return key in obj
 }
 
 document.onsubmit = async (e) => {
 	const crendentials = getInputElements()
 
 	try {
-		const result = passwordSchema.parse(crendentials)
 		Object.keys(crendentials).forEach((key) => {
-			if (crendentials[key] === "") {
-				delete crendentials[key]
+			if (isInKey(crendentials, key)) {
+				if (crendentials[key] === "") {
+					delete crendentials[key]
+				}
 			}
 		})
+		const result = passwordSchema.parse(crendentials)
 
 		await storage.set("credential", crendentials)
 		chrome.runtime.sendMessage({ message: "setTopic", data: Credential }, function (response) {

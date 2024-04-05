@@ -1,13 +1,13 @@
+//@ts-expect-error
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { z } from "zod"
 import { create } from "zustand"
 
-type AccessToken = string | null
+export type AccessToken = string | null
 
 export interface Password {
 	ID?: string
-
 	id: number
 	sitename: string
 	url: string
@@ -21,10 +21,10 @@ const passwordRegExp = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[$@$!%*?&_])[A-Za-z\
 const emailRegExp = /[A-Z0-9._%+-]+@[A-Z0-9-]+.+.[A-Z]{2,4}/gim
 
 export const passwordSchema = z.object({
-	username: z.string(),
+	username: z.string().optional().nullable(),
 	url: z.string().url({ message: "Invalid url" }),
 	email: z.string(),
-	phoneNumber: z.string().optional(),
+	phoneNumber: z.string().optional().nullable(),
 	password: z.string()
 })
 
