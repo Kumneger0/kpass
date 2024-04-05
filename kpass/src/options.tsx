@@ -25,12 +25,12 @@ const App = () => {
 }
 export default App
 
-type UpdateParams = {
+export type UpdateParams = {
 	accessToken: string
 	id: string | number
 	body: z.infer<typeof passwordSchema>
 }
-const updatePassword = async ({ accessToken, id, body }: UpdateParams) => {
+export const updatePassword = async ({ accessToken, id, body }: UpdateParams) => {
 	if (!id) throw Error("id is required to update")
 	const url = `${BASEURL}/passwords/update/${id}`
 
@@ -47,6 +47,7 @@ const updatePassword = async ({ accessToken, id, body }: UpdateParams) => {
 
 function IndexOptions() {
 	const accessToken = userStore((state) => state.accessToken)
+	const [selectedId, setSelectedId] = useState<string | number | null>(null)
 
 	const {
 		isPending,
@@ -77,28 +78,70 @@ function IndexOptions() {
 		mutate
 	} = useMutation({
 		mutationKey: ["updatePassword"],
-		mutationFn: (arg: UpdateParams) => updatePassword(arg)
+		mutationFn: (arg: UpdateParams) => updatePassword(arg),
+		onSuccess(data, variables, context) {
+			window.close()
+		},
+		onError(error, variables, context) {
+			alert("oops failed to save the password")
+		}
 	})
+	const {
+		isPending: isCreatePending,
+		isError: isCreateError,
 
-	console.log("update error", error)
+		mutateAsync
+	} = useMutation({
+		mutationKey: ["savePassword"],
+		mutationFn: () => saveNewPassword(credential, accessToken),
+		onSuccess(data, variables, context) {
+			window.close()
+		},
+		onError(error, variables, context) {
+			alert("oops failed to save the password")
+		}
+	})
 
 	if (isPending || isCredeitialPending) return <div>please wait</div>
 	if (isError || isCredeitialError) return <div>there was an error occured</div>
 
-	const previousPassword = user.passwords.find(
+	const previousPassword = user.passwords.filter(
 		({ url }) => url.toLowerCase().trim() == credential?.url?.toLowerCase()?.trim()
 	)
 
 	return (
 		<div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
 			<h1 className="text-2xl font-bold mb-4">
-				{previousPassword ? (
-					<div>do you want to update the password for {credential?.url}</div>
-				) : (
-					<div>Do you want to save your new password?</div>
-				)}
+				{!previousPassword.length && <div>Do you want to save your new password?</div>}
 			</h1>
+
+			<div className="p-4">
+				<h1 className="text-xl font-bold mb-4">
+					{!!previousPassword.length && <span>Your other passwords on {credential.url}</span>}
+				</h1>
+				{previousPassword?.map(({ email, ID, password, phoneNumber }) => {
+					return (
+						<div className="flex justify-center items-center mb-4">
+							<div className="flex justify-between items-center border-b border-gray-200 py-2 w-full">
+								<div className="text-gray-600">Email</div>
+								<div className="text-gray-800">{email}</div>
+								<div className="text-gray-600">Password</div>
+								<div className="text-gray-800">{password}</div>
+							</div>
+							<div className="ml-4">
+								<Button
+									className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+									onClick={() => setSelectedId(ID)}>
+									{selectedId == ID ? "Selected" : "Select"}
+								</Button>
+							</div>
+						</div>
+					)
+				})}
+			</div>
+
 			<div className="w-full max-w-md p-4 bg-white shadow-md rounded-md">
+				<div>{!!previousPassword.length && <span>Your Current password</span>}</div>
 				{Object.keys(credential)?.map((key) => (
 					<div
 						key={key}
@@ -110,6 +153,7 @@ function IndexOptions() {
 			</div>
 			<div className="flex justify-center mt-4">
 				<div className="mr-2">
+					hover:bg-green-700
 					<Button
 						variant="destructive"
 						className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
@@ -120,8 +164,7 @@ function IndexOptions() {
 					<Button
 						onClick={async () => {
 							try {
-								const result = await saveNewPassword(credential, accessToken)
-								console.log(result)
+								await mutateAsync()
 							} catch (err) {
 								console.error(err)
 							}
@@ -133,20 +176,21 @@ function IndexOptions() {
 				</div>
 				<div>
 					{!!previousPassword && (
-						<Button
+						<button
+							disabled={!selectedId}
 							onClick={async () => {
-								if (previousPassword) {
+								if (selectedId) {
 									mutate({
-										id: (previousPassword as unknown as Record<string, string>).ID,
+										id: selectedId,
 										accessToken: accessToken,
 										body: credential
 									})
 									return
 								}
 							}}
-							className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+							className={`bg-green-500 p-2  text-white font-bold py-2 px-4 rounded ${!selectedId ? "opacity-50 cursor-not-allowed" : "hover:bg-green-700"}`}>
 							update
-						</Button>
+						</button>
 					)}
 				</div>
 			</div>

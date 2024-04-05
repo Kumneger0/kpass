@@ -6,6 +6,8 @@ import { create } from "zustand"
 type AccessToken = string | null
 
 export interface Password {
+	ID?: string
+
 	id: number
 	sitename: string
 	url: string

@@ -14,6 +14,8 @@ import {
 import React, { useRef, useState } from "react"
 import { z, ZodError } from "zod"
 
+import { updatePassword, type UpdateParams } from "~options"
+
 import { Dialog, DialogContent, DialogTrigger } from "../components/dialog"
 
 const queryClient = new QueryClient()
@@ -95,8 +97,8 @@ function Component() {
 						<div className="font-semibold text-right">Actions</div>
 					</div>
 					<div className="flex flex-col  gap-0.5">
-						{user?.passwords?.map(({ email, url, password }) => {
-							return <EachPassWord password={password} email={email} url={url} />
+						{user?.passwords?.map(({ email, url, password, ID }) => {
+							return <EachPassWord ID={ID} password={password} email={email} url={url} />
 						})}
 					</div>
 				</div>
@@ -105,80 +107,114 @@ function Component() {
 	)
 }
 
-function EachPassWord({ email, url, password }: { email: string; url: string; password: string }) {
+function EachPassWord({
+	email,
+	url,
+	password,
+	phoneNumber = "",
+	username = "",
+	ID: id
+}: z.infer<typeof passwordSchema> & { ID: string }) {
 	const [isEdit, setIsEdit] = useState(false)
-	const urlRef = useRef<HTMLInputElement>(null)
-	const emailRef = useRef<HTMLInputElement>(null)
-	const passwordRef = useRef<HTMLInputElement>(null)
+	const formRef = useRef<HTMLFormElement>(null)
+	const accessToken = userStore(({ accessToken }) => accessToken)
+	const queryClient = useQueryClient()
+
+	const {
+		data,
+		isPending: isUpdatePending,
+		isError: isUpdateError,
+		error,
+		mutate
+	} = useMutation({
+		mutationKey: ["updatePassword"],
+		mutationFn: (arg: UpdateParams) => updatePassword(arg),
+		onSuccess(data, variables, context) {
+			queryClient.invalidateQueries()
+			setIsEdit(false)
+		},
+		onError(error, variables, context) {
+			console.log(error)
+			alert(error.message)
+		}
+	})
+
+	console.log("is update errored", error)
+
+	const handleEditPassword = (e: React.MouseEvent) => {
+		e.preventDefault()
+		const formData = new FormData(formRef.current)
+		const passwordToUpate: z.infer<typeof passwordSchema> = {
+			email: formData.get("email") as string,
+			password: formData.get("password") as string,
+			phoneNumber,
+			url,
+			username
+		}
+
+		try {
+			const result = passwordSchema.parse(passwordToUpate)
+			mutate({ accessToken, body: result, id })
+		} catch (err) {
+			console.error(err)
+		}
+	}
 
 	return (
-		<div>
-			<div className="grid grid-cols-3 items-center bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 p-4">
+		<form
+			ref={formRef}
+			className="grid grid-cols-4 items-center bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 p-4">
+			<div className="font-medium">{url}</div>
+			<div className="text-sm">
 				{isEdit ? (
 					<input
+						name="email"
 						className="py-3 px-1 border border-black outline-none rounded-xl"
-						defaultValue={url}
-						ref={urlRef}
-					/>
-				) : (
-					<div className="font-medium">{url}</div>
-				)}
-				{isEdit ? (
-					<input
-						className="py-3 px-1 border border-black outline-none  rounded-xl"
 						defaultValue={email}
-						ref={emailRef}
 					/>
 				) : (
-					<div className="text-sm">{email}</div>
+					email
 				)}
+			</div>
+			<div className="text-sm">
 				{isEdit ? (
 					<input
-						className="py-3 mx-3 px-1 border border-black outline-none  rounded-xl"
+						name="password"
+						className="py-3 px-1 border border-black outline-none rounded-xl"
 						defaultValue={password}
-						ref={passwordRef}
 					/>
 				) : (
-					<div className="text-sm">{password}</div>
+					password
 				)}
-				<div className="grid grid-rows-2 items-end justify-self-end gap-0.5">
-					{isEdit ? (
-						<Button variant="secondary">Done</Button>
-					) : (
-						<>
-							<Button onClick={() => setIsEdit((prv) => !prv)} size="icon" variant="ghost">
-								<FileEditIcon className="h-4 w-4" />
-								<span className="sr-only">Edit</span>
-							</Button>
-							<Button size="icon" variant="ghost">
-								<TrashIcon className="h-4 w-4" />
-								<span className="sr-only">Delete</span>
-							</Button>
-						</>
-					)}
-				</div>
 			</div>
-		</div>
-	)
-}
-
-function FileEditIcon(props) {
-	return (
-		<svg
-			{...props}
-			xmlns="http://www.w3.org/2000/svg"
-			width="24"
-			height="24"
-			viewBox="0 0 24 24"
-			fill="none"
-			stroke="currentColor"
-			strokeWidth="2"
-			strokeLinecap="round"
-			strokeLinejoin="round">
-			<path d="M4 13.5V4a2 2 0 0 1 2-2h8.5L20 7.5V20a2 2 0 0 1-2 2h-5.5" />
-			<polyline points="14 2 14 8 20 8" />
-			<path d="M10.42 12.61a2.1 2.1 0 1 1 2.97 2.97L7.95 21 4 22l.99-3.95 5.43-5.44Z" />
-		</svg>
+			<div className="grid grid-rows-2 items-end justify-self-end gap-0.5">
+				{isEdit ? (
+					<button
+						disabled={isUpdatePending}
+						onClick={handleEditPassword}
+						className={`bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded ${isUpdatePending ? "opacity-50 cursor-not-allowed" : ""}`}>
+						{isUpdatePending ? "..." : "Done"}
+					</button>
+				) : (
+					<>
+						<button
+							type="button"
+							className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+							onClick={(e) => {
+								e.preventDefault()
+								setIsEdit(true)
+							}}>
+							Edit
+						</button>
+						<button
+							type="button"
+							className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+							Delete
+						</button>
+					</>
+				)}
+			</div>
+		</form>
 	)
 }
 
@@ -216,26 +252,6 @@ function SearchIcon(props) {
 			strokeLinejoin="round">
 			<circle cx="11" cy="11" r="8" />
 			<path d="m21 21-4.3-4.3" />
-		</svg>
-	)
-}
-
-function TrashIcon(props) {
-	return (
-		<svg
-			{...props}
-			xmlns="http://www.w3.org/2000/svg"
-			width="24"
-			height="24"
-			viewBox="0 0 24 24"
-			fill="none"
-			stroke="currentColor"
-			strokeWidth="2"
-			strokeLinecap="round"
-			strokeLinejoin="round">
-			<path d="M3 6h18" />
-			<path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-			<path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
 		</svg>
 	)
 }
