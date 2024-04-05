@@ -145,7 +145,6 @@ func NewPassword(w http.ResponseWriter, r *http.Request) {
 }
 
 func UpdatePassword(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("updating password")
 	db := utils.DB
 
 	if db == nil {
@@ -170,7 +169,7 @@ func UpdatePassword(w http.ResponseWriter, r *http.Request) {
 		jsonData, err := json.Marshal(error)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte("failed to add you password"))
+			w.Write([]byte("failed to update password"))
 			return
 		}
 		w.Write(jsonData)
@@ -216,6 +215,57 @@ func UpdatePassword(w http.ResponseWriter, r *http.Request) {
 		w.Write(jsonData)
 	}
 	fmt.Println("updating password passowrd", password)
+}
+
+func DeletePassword(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("deleting the password")
+	db := utils.DB
+
+	if db == nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		error := users.ERROR{Message: "internal server error"}
+		jsonData, err := json.Marshal(error)
+		if err != nil {
+			fmt.Println("oops there was ans error")
+		}
+		w.Write(jsonData)
+		return
+	}
+
+	token := r.Header.Get("ACCESS_TOKEN")
+
+	if _, err := utils.VerifyToken(token); err != nil {
+		error := users.ERROR{Message: err.Error()}
+		jsonData, err := json.Marshal(error)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte("failed to update password"))
+			return
+		}
+		w.Write(jsonData)
+		return
+	}
+
+	idString := r.PathValue("id")
+	id, err := strconv.Atoi(idString)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		jsonError, _ := json.Marshal(users.ERROR{Message: err.Error()})
+		w.Write(jsonError)
+	}
+	previosPassWord := getPasswordById(id, w)
+	result := db.Delete(&previosPassWord)
+	if result.Error != nil {
+		jsonEror, _ := json.Marshal(users.ERROR{Message: result.Error.Error()})
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(jsonEror)
+	}
+	message := make(map[string]string)
+	message["message"] = "deleted"
+
+	jsonData, _ := json.Marshal(message)
+	w.WriteHeader(http.StatusAccepted)
+	w.Write(jsonData)
 
 }
 

@@ -44,6 +44,21 @@ export const updatePassword = async ({ accessToken, id, body }: UpdateParams) =>
 	const data = (await response?.json()) as User
 	return data
 }
+export const deletePassword = async ({ accessToken, id }: Omit<UpdateParams, "body">) => {
+	if (!id) throw Error("id is required to delete")
+	alert(id)
+	const url = `${BASEURL}/passwords/delete/${id}`
+
+	const response = await fetch(url, {
+		method: "delete",
+		headers: {
+			ACCESS_TOKEN: accessToken
+		}
+	})
+	const data = (await response?.json()) as User
+	console.log(data)
+	return data
+}
 
 function IndexOptions() {
 	const accessToken = userStore((state) => state.accessToken)

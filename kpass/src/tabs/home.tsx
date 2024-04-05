@@ -14,7 +14,7 @@ import {
 import React, { useRef, useState } from "react"
 import { z, ZodError } from "zod"
 
-import { updatePassword, type UpdateParams } from "~options"
+import { deletePassword, updatePassword, type UpdateParams } from "~options"
 
 import { Dialog, DialogContent, DialogTrigger } from "../components/dialog"
 
@@ -138,8 +138,25 @@ function EachPassWord({
 			alert(error.message)
 		}
 	})
+	const {
+		isPending: isDeltePending,
+		isError: isDeleteEr,
+		error: deleteErroe,
+		mutate: deletePass
+	} = useMutation({
+		mutationKey: ["deletePassword"],
+		mutationFn: (arg: Omit<UpdateParams, "body">) => deletePassword(arg),
+		onSuccess(data, variables, context) {
+			queryClient.invalidateQueries()
+			setIsEdit(false)
+		},
+		onError(error, variables, context) {
+			console.log(error)
+			alert(error.message)
+		}
+	})
 
-	console.log("is update errored", error)
+	console.log(deleteErroe)
 
 	const handleEditPassword = (e: React.MouseEvent) => {
 		e.preventDefault()
@@ -207,6 +224,10 @@ function EachPassWord({
 							Edit
 						</button>
 						<button
+							onClick={(e) => {
+								e.preventDefault()
+								deletePass({ accessToken, id })
+							}}
 							type="button"
 							className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
 							Delete
