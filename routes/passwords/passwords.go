@@ -184,7 +184,8 @@ func UpdatePassword(w http.ResponseWriter, r *http.Request) {
 		jsonData, err := json.Marshal(error)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte("failed to add you password"))
+			jsonError, _ := json.Marshal(users.ERROR{Message: err.Error()})
+			w.Write(jsonError)
 			return
 		}
 		w.Write(jsonData)
@@ -214,7 +215,6 @@ func UpdatePassword(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusAccepted)
 		w.Write(jsonData)
 	}
-	fmt.Println("updating password passowrd", password)
 }
 
 func DeletePassword(w http.ResponseWriter, r *http.Request) {

@@ -1,4 +1,4 @@
-import { passwordSchema, userStore, type AccessToken, type User } from "~utils"
+import { passwordSchema, userStore, type AccessToken, type Password, type User } from "~utils"
 
 import { Button } from "../components/button"
 
@@ -14,9 +14,8 @@ import {
 import React, { useRef, useState } from "react"
 import { z, ZodError } from "zod"
 
-import { deletePassword, updatePassword, type UpdateParams } from "~options"
-
 import { Dialog, DialogContent, DialogTrigger } from "../components/dialog"
+import { deletePassword, updatePassword, type UpdateParams } from "./savePassword"
 
 const queryClient = new QueryClient()
 
@@ -315,12 +314,11 @@ export const saveNewPassword = async (
 		},
 		body: JSON.stringify(data)
 	})
-	const json = await res.json()
+	const json = (await res.json()) as Password
 	return json
 }
 
 function AddPassword() {
-	const [testData, setTestData] = useState("")
 	const accessToken = userStore((state) => state.accessToken)
 
 	const queryClient = useQueryClient()
@@ -360,22 +358,27 @@ function AddPassword() {
 				data: parsedUserCreditial,
 				accessToken
 			})
-
-			setTestData(JSON.stringify(parsedUserCreditial, null, 2))
 		} catch (err) {
 			console.error(err)
 			if (err instanceof ZodError) {
-				setTestData(JSON.stringify(err.errors[0], null, 2))
 			}
 			if (err instanceof Error) {
-				setTestData(err.message)
 			}
 		}
 	}
 
 	return (
 		<div className="w-11/12 mx-auto">
-			<div>{testData}</div>
+			<div>
+				{data ? (
+					<div>
+						<div>url :{data.url}</div>
+						<div>email : {data.email}</div>
+						<div>password :{data.password}</div>
+					</div>
+				) : null}
+			</div>
+			<div className="font-bold text-2xl w-full text-center py-3 px-2">Add new password</div>
 			<form onSubmit={handleFormSubmit} className="max-w-sm mx-auto">
 				<div className="mb-5">
 					<label
@@ -396,14 +399,14 @@ function AddPassword() {
 					<label
 						htmlFor="email"
 						className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-						Your email
+						email or username
 					</label>
 					<input
 						type="email"
 						name="email"
 						id="email"
 						className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-						placeholder="email"
+						placeholder="email or username"
 						required
 					/>
 				</div>
@@ -422,11 +425,12 @@ function AddPassword() {
 					/>
 				</div>
 
-				<Button
+				<button
+					disabled={isPending}
 					type="submit"
-					className=" focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center ">
-					Submit
-				</Button>
+					className={` focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center ${isPending ? "opacity-50 cursor cursor-not-allowed" : ""}`}>
+					{isPending ? "please wait ..." : "Submit"}
+				</button>
 			</form>
 		</div>
 	)

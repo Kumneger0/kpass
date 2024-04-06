@@ -20,8 +20,8 @@ const BASEURL = "http://localhost:8080"
 
 const LoginContext = createContext<{
 	isLogin: boolean
-	setIsLogin: React.Dispatch<React.SetStateAction<boolean>>
-}>(null)
+	setIsLogin: React.Dispatch<React.SetStateAction<boolean>> | null
+}>({ isLogin: false, setIsLogin: null })
 
 const queryClient = new QueryClient()
 
@@ -34,13 +34,9 @@ const App = () => {
 		<LoginContext.Provider value={{ isLogin, setIsLogin }}>
 			<QueryClientProvider client={queryClient}>
 				<div className="w-96 mx-auto">
-					<h3 className="font-bold text-2xl my-2 p-3">
-						KPass Privicy first password manager{" "}
-					</h3>
+					<h3 className="font-bold text-2xl my-2 p-3">KPass Privicy first password manager </h3>
 					<IndexPopup />
-					<footer className="font-bold text-center my-3 p-3 text-lg">
-						Kpass 2024
-					</footer>
+					<footer className="font-bold text-center my-3 p-3 text-lg">Kpass 2024</footer>
 				</div>
 			</QueryClientProvider>
 		</LoginContext.Provider>
@@ -127,6 +123,7 @@ function SignUP() {
 	async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
 		e.preventDefault()
 		setIsLoading(true)
+		if (!formRef.current) return
 		const formData = new FormData(formRef.current)
 		const body = {
 			firstName: formData.get("firstName"),
@@ -140,7 +137,7 @@ function SignUP() {
 			const data = signupSchema.parse(body)
 			const result = await mutateAsync(data)
 			if (result?.status === "success") {
-				setIsLogin(true)
+				setIsLogin && setIsLogin(true)
 				return
 			}
 			setIsError(result?.data.message)
@@ -161,9 +158,7 @@ function SignUP() {
 
 	return (
 		<section className="bg-gray-50 dark:bg-gray-900">
-			{error && (
-				<div className="my-3 p-3 text-lg text-red-600 border">{error}</div>
-			)}
+			{error && <div className="my-3 p-3 text-lg text-red-600 border">{error}</div>}
 			<div className="flex flex-col items-center justify-center px-6 py-8 mx-auto lg:py-0">
 				<a
 					href="#"
@@ -278,9 +273,7 @@ function SignUP() {
 									/>
 								</div>
 								<div className="ml-3 text-sm">
-									<label
-										htmlFor="terms"
-										className="font-light text-gray-500 dark:text-gray-300">
+									<label htmlFor="terms" className="font-light text-gray-500 dark:text-gray-300">
 										I accept the{" "}
 										<a
 											className="font-medium text-primary-600 hover:underline dark:text-primary-500"
@@ -299,7 +292,7 @@ function SignUP() {
 							<p className="text-sm font-light text-gray-500 dark:text-gray-400">
 								Already have an account?
 								<Button
-									onClick={() => setIsLogin(true)}
+									onClick={() => setIsLogin && setIsLogin(true)}
 									className="font-medium text-primary-600 hover:underline dark:text-primary-500">
 									Login here
 								</Button>
@@ -312,7 +305,7 @@ function SignUP() {
 	)
 }
 
-async function LoginUser(user: z.infer<typeof signupSchema>) {
+async function LoginUser(user: Partial<z.infer<typeof signupSchema>>) {
 	const loginURL = `${BASEURL}/users/login`
 	const response = await fetch(loginURL, {
 		method: "POST",
@@ -347,7 +340,7 @@ function Login() {
 			queryClient.invalidateQueries()
 		},
 		mutationKey: ["signup"],
-		mutationFn: (data: z.infer<typeof signupSchema>) => {
+		mutationFn: (data: Partial<z.infer<typeof signupSchema>>) => {
 			return LoginUser(data)
 		}
 	})
@@ -355,6 +348,7 @@ function Login() {
 	async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
 		e.preventDefault()
 		setIsLoading(true)
+		if (!formRef.current) return
 		const formData = new FormData(formRef.current)
 		const body = {
 			email: formData.get("email"),
@@ -385,18 +379,13 @@ function Login() {
 
 	return (
 		<div className="w-full bg-white rounded-lg shadow dark:border md:mt-0 sm:max-w-md xl:p-0 dark:bg-gray-800 dark:border-gray-700">
-			{error && (
-				<div className="my-3 p-3 text-lg text-red-600 border">{error}</div>
-			)}
+			{error && <div className="my-3 p-3 text-lg text-red-600 border">{error}</div>}
 			<div className="p-6 space-y-4 md:space-y-6 sm:p-8">
 				<h1 className="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl dark:text-white">
 					Login
 				</h1>
 
-				<form
-					onSubmit={handleSubmit}
-					ref={formRef}
-					className="space-y-4 md:space-y-6">
+				<form onSubmit={handleSubmit} ref={formRef} className="space-y-4 md:space-y-6">
 					<div>
 						<label
 							htmlFor="email"
@@ -436,7 +425,7 @@ function Login() {
 					<p className="text-sm font-light text-gray-500 dark:text-gray-400">
 						new to kpass ?{" "}
 						<Button
-							onClick={() => setIsLogin(false)}
+							onClick={() => setIsLogin && setIsLogin(false)}
 							className="font-medium text-primary-600 hover:underline dark:text-primary-500">
 							sign up here
 						</Button>

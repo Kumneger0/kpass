@@ -16,7 +16,7 @@ chrome.runtime.onMessage.addListener(function (
 	}
 
 	chrome.windows.create({
-		url: chrome.runtime.getURL("options.html"),
+		url: chrome.runtime.getURL("tabs/savePassword.html"),
 		type: "popup",
 		width: 500,
 		height: 400
