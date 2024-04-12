@@ -20,7 +20,6 @@ func main() {
 	}
 
 	JWT_SECRET := os.Getenv("JWT_SECRET")
-
 	fmt.Printf("JWT_SECRET, %s", JWT_SECRET)
 
 	mux := http.NewServeMux()
