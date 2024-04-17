@@ -61,17 +61,13 @@ export interface User extends Omit<z.infer<typeof signupSchema>, "masterPassword
 }
 
 type UserStore = {
-	accessToken: AccessToken
 	user: User | null
 	setUser: (user: User | null) => void
-	setAccessToken: (accessToken: AccessToken) => void
 }
 
 export const userStore = create<UserStore>((set) => ({
 	user: null,
-	accessToken: localStorage.getItem("accessToken") || null,
-	setUser: (user: User | null) => set(() => ({ user })),
-	setAccessToken: (accessToken: AccessToken) => set(() => ({ accessToken }))
+	setUser: (user: User | null) => set(() => ({ user }))
 }))
 
 export function cn(...inputs: ClassValue[]) {

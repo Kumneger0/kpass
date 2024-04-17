@@ -46,9 +46,13 @@ const App = () => {
 export default App
 
 function IndexPopup() {
-	const accessToken = userStore((state) => state.accessToken)
-	const updateAccessToken = userStore((state) => state.setAccessToken)
+	const [accessToken, setAcessToken] = useState<string | null | undefined>("")
+
 	const { isLogin } = useContext(LoginContext)
+
+	useEffect(() => {
+		storage.get("accessToken").then(setAcessToken)
+	}, [])
 
 	if (!!accessToken)
 		return (
@@ -58,8 +62,7 @@ function IndexPopup() {
 					{accessToken && (
 						<Button
 							onClick={() => {
-								localStorage.removeItem("accessToken")
-								updateAccessToken(null)
+								storage.remove("accessToken")
 							}}
 							variant="destructive">
 							Logout
@@ -317,18 +320,17 @@ async function LoginUser(user: Partial<z.infer<typeof signupSchema>>) {
 
 	if (response.ok)
 		return {
-			status: "success",
+			status: "success" as const,
 			data: (await response.json()) as { accessToken: string }
 		} as const
 	return {
-		status: "failed",
+		status: "failed" as const,
 		data: (await response.json()) as { message: string }
 	} as const
 }
 
 function Login() {
 	const formRef = React.useRef<HTMLFormElement>(null)
-	const updateAccessToken = userStore((state) => state.setAccessToken)
 	const [error, setIsError] = React.useState<string | null>(null)
 	const [isLoading, setIsLoading] = React.useState(false)
 	const { setIsLogin } = useContext(LoginContext)
@@ -359,8 +361,7 @@ function Login() {
 			const data = loginSchema.parse(body)
 			const result = await mutateAsync(data)
 			if (result?.status === "success") {
-				updateAccessToken(result?.data.accessToken)
-				localStorage.setItem("accessToken", result?.data.accessToken)
+				storage.set("accessToken", result.data.accessToken)
 				return
 			}
 			setIsError(result?.data.message)

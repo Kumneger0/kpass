@@ -1,13 +1,26 @@
 import { object, string, ZodError } from "zod"
 
 import { storage } from "~popup"
-import { passwordSchema } from "~utils"
+import { getUserData } from "~tabs/home"
+import { passwordSchema, userStore } from "~utils"
 
 export {}
 
 const supportedInputTypes = ["text", "password", "email", "tel"]
 
 addIcon()
+
+const revalidateToken = async () => {
+	const accessToken = await storage.get("accessToken")
+
+	if (!accessToken) return
+
+	const result = await getUserData(accessToken)
+
+	console.log("result", result)
+}
+
+revalidateToken()
 
 const dialog = document.createElement("dialog")
 dialog.style.position = "absolute"
@@ -35,7 +48,7 @@ function addIcon() {
 			const img = document.createElement("img")
 			img.setAttribute(
 				"src",
-				"https://img.freepik.com/free-vector/watercolor-women-s-day-background_23-2151254843.jpg?w=1060&t=st=1712584054~exp=1712584654~hmac=723275b381b7989ed25064a6582d653ce2a4a74949dd42e04658216e2305d9b6"
+				"https://img.freepik.com/free- vector/watercolor-women-s-day-background_23-2151254843.jpg?w=1060&t=st=1712584054~exp=1712584654~hmac=723275b381b7989ed25064a6582d653ce2a4a74949dd42e04658216e2305d9b6"
 			)
 			img.setAttribute("width", "30px")
 			img.setAttribute("height", "30px")
@@ -91,7 +104,6 @@ function isInKey<Tobj extends object>(obj: Tobj, key: PropertyKey): key is keyof
 }
 
 document.onsubmit = async (e) => {
-	e.preventDefault()
 	const crendentials = getInputElements()
 	try {
 		Object.keys(crendentials).forEach((key) => {
@@ -109,10 +121,10 @@ document.onsubmit = async (e) => {
 	} catch (err) {
 		console.log(err)
 		if (err instanceof Error) {
-			alert(err.message)
+			console.log(err.message)
 		}
 		if (err instanceof ZodError) {
-			alert(err.errors[0].message)
+			console.log(err.errors[0].message)
 		}
 	}
 }

@@ -14,6 +14,8 @@ import {
 import React, { useRef, useState } from "react"
 import { z, ZodError } from "zod"
 
+import { storage } from "~popup"
+
 import { Dialog, DialogContent, DialogTrigger } from "../components/dialog"
 import { deletePassword, updatePassword, type UpdateParams } from "./savePassword"
 
@@ -43,23 +45,21 @@ export const getUserData = async (accessToken: string | null) => {
 			ACCESS_TOKEN: accessToken
 		}
 	})
+
 	const data = (await response?.json()) as User
+
 	return data
 }
 
 function Component() {
-	const accessToken = userStore((state) => state.accessToken)
-
 	const {
 		isPending,
 		error,
 		data: user
 	} = useQuery({
 		queryKey: ["repoData"],
-		queryFn: () => getUserData(accessToken)
+		queryFn: async () => getUserData((await storage.get("accessToken")) as string)
 	})
-
-	console.log(user)
 
 	if (isPending) return "Loading..."
 
@@ -118,7 +118,14 @@ function EachPassWord({
 }: Partial<z.infer<typeof passwordSchema> & { ID: string | undefined }>) {
 	const [isEdit, setIsEdit] = useState(false)
 	const formRef = useRef<HTMLFormElement>(null)
-	const accessToken = userStore(({ accessToken }) => accessToken)
+
+	const { data: accessToken, isPending } = useQuery({
+		queryKey: ["token"],
+		queryFn: async () => await storage.get("accessToken")
+	})
+
+	if (isPending) return <div>please wait </div>
+
 	const queryClient = useQueryClient()
 
 	const {
@@ -319,7 +326,10 @@ export const saveNewPassword = async (
 }
 
 function AddPassword() {
-	const accessToken = userStore((state) => state.accessToken)
+	const { data: accessToken, isPending: isTokenPending } = useQuery({
+		queryKey: ["token"],
+		queryFn: async () => await storage.get("accessToken")
+	})
 
 	const queryClient = useQueryClient()
 
@@ -354,6 +364,8 @@ function AddPassword() {
 		try {
 			const parsedUserCreditial = passwordSchema.parse(data)
 
+			if (!accessToken) throw Error("failed to save your password")
+
 			const result = await mutateAsync({
 				data: parsedUserCreditial,
 				accessToken
@@ -366,6 +378,8 @@ function AddPassword() {
 			}
 		}
 	}
+
+	if (isTokenPending) return <div>please wait </div>
 
 	return (
 		<div className="w-11/12 mx-auto">

@@ -16,12 +16,7 @@ func GetPasswords(w http.ResponseWriter, r *http.Request) {
 	if db == nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		error := users.ERROR{Message: "internal server error"}
-		jsonData, err := json.Marshal(error)
-		if err != nil {
-
-			fmt.Println("oops there was ans error")
-
-		}
+		jsonData, _ := json.Marshal(error)
 		w.Write(jsonData)
 		return
 	}
@@ -31,12 +26,8 @@ func GetPasswords(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		error := users.ERROR{Message: err.Error()}
-		jsonData, err := json.Marshal(error)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte("there was an error occured"))
-			return
-		}
+		jsonData, _ := json.Marshal(error)
+		w.WriteHeader(http.StatusInternalServerError)
 		w.Write(jsonData)
 		return
 	}
@@ -47,12 +38,8 @@ func GetPasswords(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		error := users.ERROR{Message: err.Error()}
-		jsonData, err := json.Marshal(error)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte("there was an error occured"))
-			return
-		}
+		jsonData, _ := json.Marshal(error)
+		w.WriteHeader(http.StatusInternalServerError)
 		w.Write(jsonData)
 		return
 	}
@@ -67,10 +54,8 @@ func NewPassword(w http.ResponseWriter, r *http.Request) {
 	if db == nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		error := users.ERROR{Message: "internal server error"}
-		jsonData, err := json.Marshal(error)
-		if err != nil {
-			fmt.Println("oops there was ans error")
-		}
+		jsonData, _ := json.Marshal(error)
+
 		w.Write(jsonData)
 		return
 	}
@@ -81,12 +66,8 @@ func NewPassword(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		error := users.ERROR{Message: err.Error()}
-		jsonData, err := json.Marshal(error)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte("failed to add you password"))
-			return
-		}
+		jsonData, _ := json.Marshal(error)
+		w.WriteHeader(http.StatusInternalServerError)
 		w.Write(jsonData)
 		return
 	}
@@ -97,13 +78,8 @@ func NewPassword(w http.ResponseWriter, r *http.Request) {
 
 	if err = json.NewDecoder(r.Body).Decode(&password); err != nil {
 		error := users.ERROR{Message: err.Error()}
-
-		jsonData, err := json.Marshal(error)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte("failed to add you password"))
-			return
-		}
+		jsonData, _ := json.Marshal(error)
+		w.WriteHeader(http.StatusInternalServerError)
 		w.Write(jsonData)
 		return
 	}
@@ -115,12 +91,7 @@ func NewPassword(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		error := users.ERROR{Message: err.Error()}
 		w.WriteHeader(http.StatusInternalServerError)
-
-		jsonData, err := json.Marshal(error)
-		if err != nil {
-			w.Write([]byte(err.Error()))
-			return
-		}
+		jsonData, _ := json.Marshal(error)
 		w.Write(jsonData)
 		return
 	}
@@ -131,11 +102,8 @@ func NewPassword(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(result.Error.Error())
 		error := users.ERROR{Message: result.Error.Error()}
 
-		jsonData, err := json.Marshal(error)
-		if err != nil {
-			w.Write([]byte(err.Error()))
-			return
-		}
+		jsonData, _ := json.Marshal(error)
+
 		w.Write(jsonData)
 		return
 	}

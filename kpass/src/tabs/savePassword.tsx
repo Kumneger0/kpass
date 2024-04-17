@@ -66,7 +66,11 @@ export const deletePassword = async ({ accessToken, id }: Omit<UpdateParams, "bo
 }
 
 function IndexOptions() {
-	const accessToken = userStore((state) => state.accessToken)
+	const { data: accessToken, isPending: isTokenPending } = useQuery({
+		queryKey: ["token"],
+		queryFn: async () => await storage.get("accessToken")
+	})
+
 	const [selectedId, setSelectedId] = useState<string | number | null | undefined>(null)
 
 	const {
@@ -75,7 +79,7 @@ function IndexOptions() {
 		data: user
 	} = useQuery({
 		queryKey: ["repoData"],
-		queryFn: () => getUserData(accessToken)
+		queryFn: () => getUserData(accessToken!)
 	})
 
 	const {
@@ -112,6 +116,8 @@ function IndexOptions() {
 		onSuccess: onMutaionSuccess,
 		onError: console.error
 	})
+
+	if (isTokenPending) return <div>please wait</div>
 
 	if (isPending || isCredeitialPending) return <div>please wait</div>
 	if (isError || isCredeitialError) return <div>there was an error occured</div>
@@ -187,7 +193,7 @@ function IndexOptions() {
 								if (selectedId) {
 									mutate({
 										id: selectedId,
-										accessToken: accessToken,
+										accessToken: accessToken!,
 										body: credential
 									})
 								}
