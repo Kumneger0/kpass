@@ -124,8 +124,6 @@ function EachPassWord({
 		queryFn: async () => await storage.get("accessToken")
 	})
 
-	if (isPending) return <div>please wait </div>
-
 	const queryClient = useQueryClient()
 
 	const {
@@ -164,8 +162,6 @@ function EachPassWord({
 		}
 	})
 
-	console.log(deleteErroe)
-
 	const handleEditPassword = (e: React.MouseEvent) => {
 		e.preventDefault()
 		if (!formRef.current) throw Error("formRef is undefined")
@@ -187,6 +183,7 @@ function EachPassWord({
 			console.error(err)
 		}
 	}
+	if (isPending) return <div>please wait </div>
 
 	if (!accessToken) return <div>Access Token is Missing</div>
 	if (!id) return <div>id is Missing</div>

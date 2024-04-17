@@ -2,11 +2,12 @@ import { object, string, ZodError } from "zod"
 
 import { storage } from "~popup"
 import { getUserData } from "~tabs/home"
-import { passwordSchema, userStore } from "~utils"
+import { passwordSchema, userStore, type User } from "~utils"
 
 export {}
 
 const supportedInputTypes = ["text", "password", "email", "tel"]
+const inputElementToFill: HTMLInputElement[] = []
 
 addIcon()
 
@@ -17,7 +18,9 @@ const revalidateToken = async () => {
 
 	const result = await getUserData(accessToken)
 
-	console.log("result", result)
+	if ("isError" in result && typeof result.isError == "boolean" && result.isError) {
+		await storage.remove("accessToken")
+	}
 }
 
 revalidateToken()
@@ -40,10 +43,11 @@ function addIcon() {
 	const inputs = document.querySelectorAll("input")
 
 	inputs.forEach((elem) => {
-		console.log("adding")
 		if (!supportedInputTypes.includes(elem.type)) return
 
 		if (elem.parentElement) {
+			inputElementToFill.push(elem)
+
 			const span = document.createElement("span")
 			const img = document.createElement("img")
 			img.setAttribute(
@@ -60,9 +64,14 @@ function addIcon() {
 			span.style.right = "8px"
 			span.style.top = "15px"
 
-			img.onclick = () => {
-				const passwords = ["password1", "password2", "password3", "password4"]
-				showPasswordsInModal(passwords, elem)
+			img.onclick = async () => {
+				const token = await storage.get("accessToken")
+
+				if (!token) return
+
+				const userData = await getUserData(token)
+
+				showPasswordsInModal(userData.passwords, elem)
 			}
 
 			elem.parentElement.style.position = "relative"
@@ -87,7 +96,6 @@ const getInputElements = () => {
 
 		if (elem.type == "password") {
 			crendentials.password = elem.value
-
 			return
 		}
 		const name = elem.name
@@ -129,7 +137,7 @@ document.onsubmit = async (e) => {
 	}
 }
 
-function showPasswordsInModal(passwords: Array<string>, elem: HTMLInputElement) {
+function showPasswordsInModal(passwords: User["passwords"], elem: HTMLInputElement) {
 	const div = document.createElement("div")
 	div.style.display = "flex"
 	div.style.flexDirection = "column"
@@ -152,10 +160,39 @@ function showPasswordsInModal(passwords: Array<string>, elem: HTMLInputElement) 
 		passEleme.style.borderRadius = "5px"
 		passEleme.style.boxShadow = "0 2px 4px rgba(0, 0, 0, 0.1)"
 
-		const span = document.createElement("span")
-		span.innerText = pass
-		span.style.fontSize = "16px"
-		span.style.color = "#333"
+		const arrs = [
+			Object.keys(pass)
+				.map((key) => {
+					if (
+						key.toLowerCase().trim() !== "email" &&
+						key.toLowerCase().trim() !== "username" &&
+						key.toLowerCase().trim() !== "password"
+					)
+						return
+
+					if (pass[key as keyof typeof pass] == "" || !pass[key as keyof typeof pass]) return
+
+					return {
+						type: key.toLowerCase(),
+						value: pass[key as keyof typeof pass]
+					}
+				})
+				.filter((v) => !!v)?.[0]
+		] as Array<{ type: string; value: string }>
+
+		console.log(arrs)
+
+		arrs.map(({ value, type }) => {
+			if (type == "password") return
+			const span = document.createElement("span")
+			span.innerText = value as string
+			span.style.fontSize = "16px"
+			span.style.color = "black"
+
+			console.log("value", value)
+
+			passEleme.appendChild(span)
+		})
 
 		const button = document.createElement("button")
 		button.innerText = "select"
@@ -170,11 +207,17 @@ function showPasswordsInModal(passwords: Array<string>, elem: HTMLInputElement) 
 		button.onmouseover = () => (button.style.backgroundColor = "#0056b3")
 		button.onmouseout = () => (button.style.backgroundColor = "#007bff")
 
-		passEleme.appendChild(span)
 		passEleme.appendChild(button)
 
 		button.onclick = () => {
-			elem.value = pass
+			inputElementToFill.forEach((input) => {
+				if (input.type.toLowerCase().trim() == "password") {
+					input.value = pass.password
+					return
+				}
+				input.value = pass.email
+			})
+
 			dialog.close()
 		}
 
@@ -183,5 +226,6 @@ function showPasswordsInModal(passwords: Array<string>, elem: HTMLInputElement) 
 
 	dialog.replaceChildren(div)
 	dialog.open = true
-	dialog.showModal()
+
+	!dialog.open && dialog.showModal()
 }

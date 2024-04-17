@@ -17,6 +17,7 @@ type USERTOKEN struct {
 
 type ERROR struct {
 	Message string `json:"message"`
+	IsError bool   `json:"isError"`
 }
 
 func GetUsers(w http.ResponseWriter, r *http.Request) {

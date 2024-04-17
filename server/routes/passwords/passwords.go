@@ -25,7 +25,7 @@ func GetPasswords(w http.ResponseWriter, r *http.Request) {
 	userId, err := utils.VerifyToken(token)
 
 	if err != nil {
-		error := users.ERROR{Message: err.Error()}
+		error := users.ERROR{Message: err.Error(), IsError: true}
 		jsonData, _ := json.Marshal(error)
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write(jsonData)

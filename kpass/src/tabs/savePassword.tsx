@@ -118,6 +118,7 @@ function IndexOptions() {
 	})
 
 	if (isTokenPending) return <div>please wait</div>
+	if (!accessToken) return <div>login to strt saving your passwords</div>
 
 	if (isPending || isCredeitialPending) return <div>please wait</div>
 	if (isError || isCredeitialError) return <div>there was an error occured</div>
