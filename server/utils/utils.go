@@ -10,6 +10,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/joho/godotenv"
 )
 
 type User struct {
@@ -32,8 +33,8 @@ type Password struct {
 }
 
 func ConnectToDB() (*gorm.DB, error) {
-
-	dsn := "postgresql://postgres:12345678@localhost:5432/postgres"
+	_ = godotenv.Load()
+	dsn := os.Getenv("PSG_URL")
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
