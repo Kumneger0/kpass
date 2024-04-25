@@ -33,9 +33,11 @@ const Home = () => {
 
 export default Home
 
-const BASEURL = "http://localhost:8080"
-
 export const getUserData = async (accessToken: string | null) => {
+	const BASEURL = await storage.get("base-url")
+
+	if (!BASEURL) throw new Error("Failed to get server url")
+
 	const url = `${BASEURL}/passwords`
 
 	if (!accessToken) throw Error("please specify access token")
@@ -310,6 +312,10 @@ export const saveNewPassword = async (
 	accessToken: AccessToken
 ) => {
 	if (!accessToken) throw Error("Access Token is requied to save the passowrd")
+
+	const BASEURL = await storage.get("base-url")
+
+	if (!BASEURL) throw new Error("Failed to get server url")
 	const res = await fetch(`${BASEURL}/passwords/new`, {
 		method: "POST",
 		headers: {

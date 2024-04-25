@@ -1,32 +1,31 @@
-import { object, string, ZodError } from "zod"
+import { ZodError } from "zod"
 
 import { storage } from "~popup"
 import { getUserData } from "~tabs/home"
-import { passwordSchema, userStore, type User } from "~utils"
+import { passwordSchema, type User } from "~utils"
 
-export {}
+//@ts-expect-error Cannot find module '../../assets/icon.png' or its corresponding type declarations.ts(2307)
+
+import logo from "../../assets/icon.png"
 
 const supportedInputTypes = ["text", "password", "email", "tel"]
 const inputElementToFill: HTMLInputElement[] = []
 
-addIcon()
-
 const revalidateToken = async () => {
 	const accessToken = await storage.get("accessToken")
-    
-     console.log(accessToken, 'acces')
 
-
-	if (!accessToken) return
+	if (!accessToken) return null
 
 	const result = await getUserData(accessToken)
 
 	if ("isError" in result && typeof result.isError == "boolean" && result.isError) {
 		await storage.remove("accessToken")
 	}
+	return accessToken
 }
 
 revalidateToken()
+addIcon()
 
 const dialog = document.createElement("dialog")
 dialog.style.position = "absolute"
@@ -53,12 +52,15 @@ function addIcon() {
 
 			const span = document.createElement("span")
 			const img = document.createElement("img")
-			img.setAttribute(
-				"src",
-				"https://img.freepik.com/free- vector/watercolor-women-s-day-background_23-2151254843.jpg?w=1060&t=st=1712584054~exp=1712584654~hmac=723275b381b7989ed25064a6582d653ce2a4a74949dd42e04658216e2305d9b6"
-			)
+			img.setAttribute("src", logo)
 			img.setAttribute("width", "30px")
 			img.setAttribute("height", "30px")
+
+			revalidateToken().then((token) => {
+				if (token) {
+					img.style.opacity = "0.5"
+				}
+			})
 
 			img.style.borderRadius = "50%"
 
@@ -66,6 +68,7 @@ function addIcon() {
 			span.style.position = "absolute"
 			span.style.right = "8px"
 			span.style.top = "15px"
+			span.style.cursor = "pointer"
 
 			img.onclick = async () => {
 				const token = await storage.get("accessToken")
@@ -74,7 +77,15 @@ function addIcon() {
 
 				const userData = await getUserData(token)
 
-				showPasswordsInModal(userData.passwords, elem)
+				if (dialog.open) {
+					dialog.close()
+					return
+				}
+
+				showPasswordsInModal(
+					userData.passwords.filter(({ url }) => url === location.origin),
+					elem
+				)
 			}
 
 			elem.parentElement.style.position = "relative"
@@ -151,84 +162,92 @@ function showPasswordsInModal(passwords: User["passwords"], elem: HTMLInputEleme
 	div.style.borderRadius = "10px"
 	div.style.boxShadow = "0 4px 6px rgba(0, 0, 0, 0.1)"
 
-	passwords.forEach((pass) => {
-		const passEleme = document.createElement("div")
-		passEleme.style.display = "flex"
-		passEleme.style.justifyContent = "space-between"
-		passEleme.style.alignItems = "center"
-		passEleme.style.width = "100%"
-		passEleme.style.padding = "10px"
-		passEleme.style.marginBottom = "10px"
-		passEleme.style.backgroundColor = "#ffffff"
-		passEleme.style.borderRadius = "5px"
-		passEleme.style.boxShadow = "0 2px 4px rgba(0, 0, 0, 0.1)"
+	passwords.length
+		? passwords.forEach((pass) => {
+				const passEleme = document.createElement("div")
+				passEleme.style.display = "flex"
+				passEleme.style.justifyContent = "space-between"
+				passEleme.style.alignItems = "center"
+				passEleme.style.width = "100%"
+				passEleme.style.padding = "10px"
+				passEleme.style.marginBottom = "10px"
+				passEleme.style.backgroundColor = "#ffffff"
+				passEleme.style.borderRadius = "5px"
+				passEleme.style.boxShadow = "0 2px 4px rgba(0, 0, 0, 0.1)"
 
-		const arrs = [
-			Object.keys(pass)
-				.map((key) => {
-					if (
-						key.toLowerCase().trim() !== "email" &&
-						key.toLowerCase().trim() !== "username" &&
-						key.toLowerCase().trim() !== "password"
-					)
-						return
+				const arrs = [
+					Object.keys(pass)
+						.map((key) => {
+							if (
+								key.toLowerCase().trim() !== "email" &&
+								key.toLowerCase().trim() !== "username" &&
+								key.toLowerCase().trim() !== "password"
+							)
+								return
 
-					if (pass[key as keyof typeof pass] == "" || !pass[key as keyof typeof pass]) return
+							if (pass[key as keyof typeof pass] == "" || !pass[key as keyof typeof pass]) return
 
-					return {
-						type: key.toLowerCase(),
-						value: pass[key as keyof typeof pass]
-					}
+							return {
+								type: key.toLowerCase(),
+								value: pass[key as keyof typeof pass]
+							}
+						})
+						.filter((v) => !!v)?.[0]
+				] as Array<{ type: string; value: string }>
+
+				console.log(arrs)
+
+				arrs.map(({ value, type }) => {
+					if (type == "password") return
+					const span = document.createElement("span")
+					span.innerText = value as string
+					span.style.fontSize = "16px"
+					span.style.color = "black"
+
+					console.log("value", value)
+
+					passEleme.appendChild(span)
 				})
-				.filter((v) => !!v)?.[0]
-		] as Array<{ type: string; value: string }>
 
-		console.log(arrs)
+				const button = document.createElement("button")
+				button.innerText = "select"
+				button.style.padding = "8px 16px"
+				button.style.backgroundColor = "#007bff"
+				button.style.color = "#fff"
+				button.style.border = "none"
+				button.style.borderRadius = "5px"
+				button.style.cursor = "pointer"
+				button.style.transition = "background-color 0.3s ease"
 
-		arrs.map(({ value, type }) => {
-			if (type == "password") return
-			const span = document.createElement("span")
-			span.innerText = value as string
-			span.style.fontSize = "16px"
-			span.style.color = "black"
+				button.onmouseover = () => (button.style.backgroundColor = "#0056b3")
+				button.onmouseout = () => (button.style.backgroundColor = "#007bff")
 
-			console.log("value", value)
+				passEleme.appendChild(button)
 
-			passEleme.appendChild(span)
-		})
+				button.onclick = () => {
+					inputElementToFill.forEach((input) => {
+						if (input.type.toLowerCase().trim() == "password") {
+							input.value = pass.password
+							return
+						}
+						input.value = pass.email
+					})
 
-		const button = document.createElement("button")
-		button.innerText = "select"
-		button.style.padding = "8px 16px"
-		button.style.backgroundColor = "#007bff"
-		button.style.color = "#fff"
-		button.style.border = "none"
-		button.style.borderRadius = "5px"
-		button.style.cursor = "pointer"
-		button.style.transition = "background-color 0.3s ease"
-
-		button.onmouseover = () => (button.style.backgroundColor = "#0056b3")
-		button.onmouseout = () => (button.style.backgroundColor = "#007bff")
-
-		passEleme.appendChild(button)
-
-		button.onclick = () => {
-			inputElementToFill.forEach((input) => {
-				if (input.type.toLowerCase().trim() == "password") {
-					input.value = pass.password
-					return
+					dialog.close()
 				}
-				input.value = pass.email
+
+				div.appendChild(passEleme)
 			})
-
-			dialog.close()
-		}
-
-		div.appendChild(passEleme)
-	})
+		: (() => {
+				const emptyNoTifierDiv = document.createElement("div")
+				emptyNoTifierDiv.innerText = "No Saved Password availible for this site"
+				div.replaceChildren(emptyNoTifierDiv)
+			})()
 
 	dialog.replaceChildren(div)
 	dialog.open = true
 
 	!dialog.open && dialog.showModal()
 }
+
+export {}
