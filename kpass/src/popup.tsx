@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from "react"
+import React, { createContext, useContext, useEffect, useRef, useState } from "react"
 
 import { loginSchema, signupSchema, userStore, type User } from "./utils"
 
@@ -16,12 +16,11 @@ import { Storage } from "@plasmohq/storage"
 
 import { Button } from "~components/button"
 
-const BASEURL = "http://localhost:8080"
-
-const LoginContext = createContext<{
+const KapssContext = createContext<{
 	isLogin: boolean
 	setIsLogin: React.Dispatch<React.SetStateAction<boolean>> | null
-}>({ isLogin: false, setIsLogin: null })
+	baseURL: string
+}>({ isLogin: false, setIsLogin: null, baseURL: "" })
 
 const queryClient = new QueryClient()
 
@@ -29,9 +28,46 @@ export const storage = new Storage()
 
 const App = () => {
 	const [isLogin, setIsLogin] = useState(false)
+	const [baseURL, setBaseURL] = useState<string | null>("")
+	const inputRef = useRef<HTMLInputElement>(null)
+
+	useEffect(() => {
+		storage.get("base-url").then((baseURL) => setBaseURL(baseURL!))
+	}, [])
+
+	if (!baseURL)
+		return (
+			<div>
+				<h1>Enter Server URL</h1>
+				<div>
+					<input
+						ref={inputRef}
+						type="url"
+						onInvalid={() => alert("please enter valid input")}
+						placeholder="Enter Server URL"
+					/>
+					<button
+						onClick={async () => {
+							const serverURL = inputRef.current?.value
+							if (!serverURL) {
+								alert("please enter url")
+								return
+							}
+							try {
+								await storage.set("base-url", serverURL)
+								setBaseURL(serverURL)
+							} catch (err) {
+								console.error(err)
+							}
+						}}>
+						save
+					</button>
+				</div>
+			</div>
+		)
 
 	return (
-		<LoginContext.Provider value={{ isLogin, setIsLogin }}>
+		<KapssContext.Provider value={{ isLogin, setIsLogin, baseURL }}>
 			<QueryClientProvider client={queryClient}>
 				<div className="w-96 mx-auto">
 					<h3 className="font-bold text-2xl my-2 p-3">KPass Privicy first password manager </h3>
@@ -39,7 +75,7 @@ const App = () => {
 					<footer className="font-bold text-center my-3 p-3 text-lg">Kpass 2024</footer>
 				</div>
 			</QueryClientProvider>
-		</LoginContext.Provider>
+		</KapssContext.Provider>
 	)
 }
 
@@ -48,11 +84,13 @@ export default App
 function IndexPopup() {
 	const [accessToken, setAcessToken] = useState<string | null | undefined>("")
 
-	const { isLogin } = useContext(LoginContext)
+	const { isLogin } = useContext(KapssContext)
 
 	useEffect(() => {
 		storage.get("accessToken").then(setAcessToken)
 	}, [])
+
+	console.log(accessToken, "accessToken")
 
 	if (!!accessToken)
 		return (
@@ -82,7 +120,7 @@ function IndexPopup() {
 	return <SignUP />
 }
 
-async function registerUser(user: z.infer<typeof signupSchema>) {
+async function registerUser(user: z.infer<typeof signupSchema>, BASEURL: string) {
 	const signupUrl = `${BASEURL}/users/new`
 	const response = await fetch(signupUrl, {
 		method: "POST",
@@ -104,7 +142,7 @@ async function registerUser(user: z.infer<typeof signupSchema>) {
 }
 
 function SignUP() {
-	const { setIsLogin } = useContext(LoginContext)
+	const { setIsLogin, baseURL } = useContext(KapssContext)
 
 	const formRef = React.useRef<HTMLFormElement>(null)
 	const [error, setIsError] = React.useState<string | null>(null)
@@ -119,7 +157,7 @@ function SignUP() {
 		},
 		mutationKey: ["signup"],
 		mutationFn: (data: z.infer<typeof signupSchema>) => {
-			return registerUser(data)
+			return registerUser(data, baseURL)
 		}
 	})
 
@@ -129,10 +167,7 @@ function SignUP() {
 		if (!formRef.current) return
 		const formData = new FormData(formRef.current)
 		const body = {
-			firstName: formData.get("firstName"),
-			lastName: formData.get("lastName"),
 			email: formData.get("email"),
-			username: formData.get("username"),
 			masterPassword: formData.get("masterPassword")
 		}
 
@@ -183,51 +218,6 @@ function SignUP() {
 							className="space-y-4 md:space-y-6"
 							action="#"
 							onSubmit={handleSubmit}>
-							<div>
-								<label
-									htmlFor="username"
-									className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-									Username
-								</label>
-								<input
-									type="text"
-									name="username"
-									id="username"
-									className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-									placeholder="username"
-									required
-								/>
-							</div>
-							<div>
-								<label
-									htmlFor="firstname"
-									className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-									Firstname
-								</label>
-								<input
-									type="text"
-									name="firstName"
-									id="firstname"
-									className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-									placeholder="firstname"
-									required
-								/>
-							</div>
-							<div>
-								<label
-									htmlFor="lastname"
-									className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-									lastname
-								</label>
-								<input
-									type="text"
-									name="lastName"
-									id="lastname"
-									className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-									placeholder="lastname"
-									required
-								/>
-							</div>
 							<div>
 								<label
 									htmlFor="email"
@@ -308,7 +298,7 @@ function SignUP() {
 	)
 }
 
-async function LoginUser(user: Partial<z.infer<typeof signupSchema>>) {
+async function LoginUser(user: Partial<z.infer<typeof signupSchema>>, BASEURL: string) {
 	const loginURL = `${BASEURL}/users/login`
 	const response = await fetch(loginURL, {
 		method: "POST",
@@ -333,7 +323,7 @@ function Login() {
 	const formRef = React.useRef<HTMLFormElement>(null)
 	const [error, setIsError] = React.useState<string | null>(null)
 	const [isLoading, setIsLoading] = React.useState(false)
-	const { setIsLogin } = useContext(LoginContext)
+	const { setIsLogin, baseURL } = useContext(KapssContext)
 
 	const queryClient = useQueryClient()
 
@@ -343,7 +333,7 @@ function Login() {
 		},
 		mutationKey: ["signup"],
 		mutationFn: (data: Partial<z.infer<typeof signupSchema>>) => {
-			return LoginUser(data)
+			return LoginUser(data, baseURL)
 		}
 	})
 

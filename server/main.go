@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"server/routes/passwords"
 	"server/routes/users"
 
@@ -18,9 +17,6 @@ func main() {
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
-
-	JWT_SECRET := os.Getenv("JWT_SECRET")
-	fmt.Printf("JWT_SECRET, %s", JWT_SECRET)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /users/new", users.SingUp)

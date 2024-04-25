@@ -10,13 +10,11 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/joho/godotenv"
 )
 
 type User struct {
 	gorm.Model
-	Username       string         `json:"username"  gorm:"uniqueIndex"`
-	FirstName      string         `json:"firstName"`
-	LastName       string         `json:"lastName"`
 	Email          string         `json:"email" gorm:"uniqueIndex"`
 	MasterPassword string         `json:"masterPassword"`
 	Passwords      []Password     `json:"passwords" gorm:"foreignKey:UserID"`
@@ -35,8 +33,8 @@ type Password struct {
 }
 
 func ConnectToDB() (*gorm.DB, error) {
-
-	dsn := "postgresql://postgres:12345678@localhost:5432/postgres"
+	_ = godotenv.Load()
+	dsn := os.Getenv("PSG_URL")
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
