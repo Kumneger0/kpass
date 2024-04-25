@@ -14,9 +14,6 @@ import (
 
 type User struct {
 	gorm.Model
-	Username       string         `json:"username"  gorm:"uniqueIndex"`
-	FirstName      string         `json:"firstName"`
-	LastName       string         `json:"lastName"`
 	Email          string         `json:"email" gorm:"uniqueIndex"`
 	MasterPassword string         `json:"masterPassword"`
 	Passwords      []Password     `json:"passwords" gorm:"foreignKey:UserID"`

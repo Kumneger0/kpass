@@ -13,6 +13,9 @@ addIcon()
 
 const revalidateToken = async () => {
 	const accessToken = await storage.get("accessToken")
+    
+     console.log(accessToken, 'acces')
+
 
 	if (!accessToken) return
 

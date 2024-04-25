@@ -54,6 +54,8 @@ function IndexPopup() {
 		storage.get("accessToken").then(setAcessToken)
 	}, [])
 
+	console.log(accessToken, "accessToken")
+
 	if (!!accessToken)
 		return (
 			<div className="w-full max-w-sm p-4 bg-white">
@@ -129,10 +131,7 @@ function SignUP() {
 		if (!formRef.current) return
 		const formData = new FormData(formRef.current)
 		const body = {
-			firstName: formData.get("firstName"),
-			lastName: formData.get("lastName"),
 			email: formData.get("email"),
-			username: formData.get("username"),
 			masterPassword: formData.get("masterPassword")
 		}
 
@@ -183,51 +182,6 @@ function SignUP() {
 							className="space-y-4 md:space-y-6"
 							action="#"
 							onSubmit={handleSubmit}>
-							<div>
-								<label
-									htmlFor="username"
-									className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-									Username
-								</label>
-								<input
-									type="text"
-									name="username"
-									id="username"
-									className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-									placeholder="username"
-									required
-								/>
-							</div>
-							<div>
-								<label
-									htmlFor="firstname"
-									className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-									Firstname
-								</label>
-								<input
-									type="text"
-									name="firstName"
-									id="firstname"
-									className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-									placeholder="firstname"
-									required
-								/>
-							</div>
-							<div>
-								<label
-									htmlFor="lastname"
-									className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-									lastname
-								</label>
-								<input
-									type="text"
-									name="lastName"
-									id="lastname"
-									className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-									placeholder="lastname"
-									required
-								/>
-							</div>
 							<div>
 								<label
 									htmlFor="email"

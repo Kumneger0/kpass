@@ -29,17 +29,6 @@ export const passwordSchema = z.object({
 })
 
 export const signupSchema = z.object({
-	username: z
-		.string()
-		.min(5, { message: "username should be at least 5 charaters" })
-		.max(20, { message: "username should not exced 20 charaters" }),
-	firstName: z.string().min(2, { message: "firstname  should be at least 2 charaters" }).max(20, {
-		message: "first should not exced 20 charaters"
-	}),
-
-	lastName: z.string().min(2, { message: "lastname  should be at least 2 charaters" }).max(20, {
-		message: "lastname should not exced 20 charaters"
-	}),
 	email: z.string().email().regex(emailRegExp, { message: "Invalid email" }),
 	masterPassword: z
 		.string()
@@ -50,7 +39,6 @@ export const signupSchema = z.object({
 		.min(6)
 		.max(20)
 })
-
 export const loginSchema = z.object({
 	email: z.string().email().regex(emailRegExp, { message: "Invalid email" }),
 	masterPassword: z.string().min(6).max(20)
