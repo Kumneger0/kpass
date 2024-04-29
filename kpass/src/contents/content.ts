@@ -30,13 +30,15 @@ addIcon()
 const dialog = document.createElement("dialog")
 dialog.style.position = "absolute"
 dialog.style.width = "300px"
-dialog.style.height = "300px"
+dialog.style.maxHeight = "300px"
+dialog.style.height = "auto"
 dialog.style.padding = "5px"
-dialog.style.borderRadius = "50px"
+dialog.style.borderRadius = "20px"
 dialog.style.top = "50%"
 dialog.style.left = "50%"
 dialog.style.zIndex = "1000"
 dialog.style.transform = "translate(-50%, -50%)"
+dialog.style.border = "2px solid black"
 
 dialog.open = false
 document.body.appendChild(dialog)
@@ -243,6 +245,23 @@ function showPasswordsInModal(passwords: User["passwords"], elem: HTMLInputEleme
 				emptyNoTifierDiv.innerText = "No Saved Password availible for this site"
 				div.replaceChildren(emptyNoTifierDiv)
 			})()
+
+	const button = document.createElement("button")
+
+	button.innerText = "close"
+	button.style.color = "white"
+
+	button.style.width = "100%"
+	button.style.padding = "20px"
+	button.style.borderRadius = "10px"
+	button.style.backgroundColor = "red"
+	button.style.margin = "10px"
+
+	button.onclick = () => {
+		dialog.close()
+	}
+
+	div.append(button)
 
 	dialog.replaceChildren(div)
 	dialog.open = true
