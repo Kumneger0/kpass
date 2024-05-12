@@ -11,7 +11,7 @@ import {
 	useQuery,
 	useQueryClient
 } from "@tanstack/react-query"
-import React, { useRef, useState } from "react"
+import React, { useRef, useState, type Dispatch, type SetStateAction } from "react"
 import { z, ZodError } from "zod"
 
 import { storage } from "~popup"
@@ -54,6 +54,8 @@ export const getUserData = async (accessToken: string | null) => {
 }
 
 function Component() {
+	const [search, setSearch] = useState<string | null>(null)
+
 	const {
 		isPending,
 		error,
@@ -67,12 +69,21 @@ function Component() {
 
 	if (error) return "An error has occurred: " + error.message
 
+	const filltedPassWords = search
+		? user.passwords.filter(({ url }) => url.toLowerCase().includes(search.toLowerCase()))
+		: user.passwords
+
+	console.log(filltedPassWords)
+
 	return (
 		<div className="grid md:grid-cols-2 gap-4 items-start max-w-5xl mx-auto px-4">
 			<div className="space-y-4">
 				<div className="space-y-2">
 					<h1 className="text-3xl font-bold">KPass</h1>
 					<p className="text-gray-500 dark:text-gray-400">Securely manage your passwords</p>
+				</div>
+				<div>
+					<Search search={search} setSearch={setSearch} />
 				</div>
 				<div className="space-y-4">
 					<div className="grid grid-cols-2 items-center">
@@ -100,12 +111,33 @@ function Component() {
 						<div className="font-semibold text-right">Actions</div>
 					</div>
 					<div className="flex flex-col  gap-0.5">
-						{user?.passwords?.map(({ email, url, password, ID }) => {
+						{filltedPassWords?.map(({ email, url, password, ID }) => {
 							return <EachPassWord ID={ID} password={password} email={email} url={url} />
 						})}
 					</div>
 				</div>
 			</div>
+		</div>
+	)
+}
+
+function Search({
+	search,
+	setSearch,
+	...props
+}: React.InputHTMLAttributes<HTMLInputElement> & {
+	search: string | null
+	setSearch: Dispatch<SetStateAction<string | null>>
+}) {
+	return (
+		<div>
+			<input
+				className="p-2 m-2 rounded-xl "
+				placeholder="Search Your Passwords"
+				type="search"
+				{...props}
+				onChange={(e) => setSearch(e.currentTarget.value)}
+			/>
 		</div>
 	)
 }
