@@ -73,8 +73,6 @@ function Component() {
 		? user.passwords.filter(({ url }) => url.toLowerCase().includes(search.toLowerCase()))
 		: user.passwords
 
-	console.log(filltedPassWords)
-
 	return (
 		<div className="grid md:grid-cols-2 gap-4 items-start max-w-5xl mx-auto px-4">
 			<div className="space-y-4">
@@ -132,7 +130,7 @@ function Search({
 	return (
 		<div>
 			<input
-				className="p-2 m-2 rounded-xl "
+				className="py-4 px-2 border border-black m-2 rounded-xl "
 				placeholder="Search Your Passwords"
 				type="search"
 				{...props}
