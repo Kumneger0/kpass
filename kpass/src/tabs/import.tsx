@@ -1,24 +1,28 @@
+import {
+	createColumnHelper,
+	flexRender,
+	getCoreRowModel,
+	useReactTable
+} from "@tanstack/react-table"
 import Papa from "papaparse"
-import React, { useRef, useState } from "react"
+import React, { useState } from "react"
 
-import { Button } from "../components/button"
 import { Card, CardContent, CardHeader, CardTitle } from "../components/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/Select"
+import { type Password } from "../utils"
 
-function Import() {
+function Import({ onCSVInput }: { onCSVInput: (passwords: Papa.ParseResult<unknown>) => void }) {
 	const readCSV = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const files = e.currentTarget.files
 		if (!files?.length) return
 		Papa.parse(files[0], {
-			complete: function (results) {
-				console.log(results)
-			}
+			complete: onCSVInput
 		})
 	}
 
 	return (
 		<div className="">
-			<div>Read passwords from csv file</div>
+			<div>Select your CSV file</div>
 			<div>
 				<input
 					onChange={readCSV}
@@ -65,9 +69,43 @@ const steps: Steps = {
 	]
 }
 
+type ArrayOfPasswords = Array<Omit<Password, "ID">>
+
+function covertArrayToArrayOfPasswords(
+	array: Papa.ParseResult<unknown>,
+	passwordManager: Managers
+): ArrayOfPasswords {
+	let passwords: ArrayOfPasswords = []
+	const headers = array.data[0] as string[]
+	console.log("headers ", headers)
+	if (passwordManager == "google-chrome") {
+		passwords = (array.data as Array<string[]>).map((row, i) => {
+			const singleRow: Omit<Password, "ID"> = {}
+			row.forEach((p, i) => {
+				if (headers[i] == "url") {
+					singleRow.url = p
+				} else if (headers[i] == "username") {
+					singleRow.email = p
+				} else if (headers[i] == "password") {
+					singleRow.password = p
+				}
+			})
+			singleRow.id = i
+			return singleRow
+		})
+	}
+	return passwords
+}
+
 export default function ImportPasswords() {
 	const [selectedPasswordManager, setSelectedPasswordManager] = useState<Managers>("google-chrome")
+	const [passwords, setPassswords] = useState<ArrayOfPasswords>([])
 	const selectedStep = steps[selectedPasswordManager]
+
+	const onCSVInput = (passwords: Papa.ParseResult<unknown>) => {
+		const arrofPass = covertArrayToArrayOfPasswords(passwords, selectedPasswordManager)
+		setPassswords(arrofPass)
+	}
 
 	return (
 		<div className="mx-auto max-w-md space-y-6 py-12">
@@ -103,10 +141,87 @@ export default function ImportPasswords() {
 							})}
 						</CardContent>
 					</Card>
-
-					<Button className="w-full">Import</Button>
+					<Import onCSVInput={onCSVInput} />
 				</div>
 			</div>
+			<App passwords={passwords} />
+		</div>
+	)
+}
+
+const columnHelper = createColumnHelper<Password>()
+
+const columns = [
+	columnHelper.accessor("url", {
+		cell: (info) => info.getValue(),
+		footer: (info) => info.column.id
+	}),
+	columnHelper.accessor((row) => row.email, {
+		id: "lastName",
+		cell: (info) => <i>{info.getValue()}</i>,
+		header: () => <span>email | username</span>,
+		footer: (info) => info.column.id
+	}),
+	columnHelper.accessor("password", {
+		header: () => "password",
+		cell: (info) => info.renderValue(),
+		footer: (info) => info.column.id
+	})
+]
+
+function App({ passwords }: { passwords: ArrayOfPasswords }) {
+	const [data, _setData] = React.useState(passwords)
+	const rerender = React.useReducer(() => ({}), {})[1]
+
+	const table = useReactTable({
+		data,
+		columns,
+		getCoreRowModel: getCoreRowModel()
+	})
+
+	return (
+		<div className="p-2">
+			<table>
+				<thead>
+					{table.getHeaderGroups().map((headerGroup) => (
+						<tr key={headerGroup.id}>
+							{headerGroup.headers.map((header) => (
+								<th key={header.id}>
+									{header.isPlaceholder
+										? null
+										: flexRender(header.column.columnDef.header, header.getContext())}
+								</th>
+							))}
+						</tr>
+					))}
+				</thead>
+				<tbody>
+					{table.getRowModel().rows.map((row) => (
+						<tr key={row.id}>
+							{row.getVisibleCells().map((cell) => (
+								<td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
+							))}
+						</tr>
+					))}
+				</tbody>
+				<tfoot>
+					{table.getFooterGroups().map((footerGroup) => (
+						<tr key={footerGroup.id}>
+							{footerGroup.headers.map((header) => (
+								<th key={header.id}>
+									{header.isPlaceholder
+										? null
+										: flexRender(header.column.columnDef.footer, header.getContext())}
+								</th>
+							))}
+						</tr>
+					))}
+				</tfoot>
+			</table>
+			<div className="h-4" />
+			<button onClick={() => rerender()} className="border p-2">
+				Rerender
+			</button>
 		</div>
 	)
 }
