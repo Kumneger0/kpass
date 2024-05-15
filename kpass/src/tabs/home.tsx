@@ -226,27 +226,15 @@ function EachPassWord({
 			className="grid grid-cols-4 items-center bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 p-4">
 			<div className="font-medium">{url}</div>
 			<div className="text-sm">
-				{isEdit ? (
-					<input
-						name="email"
-						className="py-3 px-1 border border-black outline-none rounded-xl"
-						defaultValue={email}
-					/>
-				) : (
-					email
-				)}
+				<input
+					name="email"
+					className="py-3 px-1 border border-black outline-none rounded-xl"
+					defaultValue={email}
+					readOnly={!isEdit}
+				/>
 			</div>
-			<div className="text-sm">
-				{isEdit ? (
-					<input
-						name="password"
-						className="py-3 px-1 border border-black outline-none rounded-xl"
-						defaultValue={password}
-					/>
-				) : (
-					password
-				)}
-			</div>
+			<ShowPassword isEdit password={password} />
+
 			<div className="grid grid-rows-2 items-end justify-self-end gap-0.5">
 				{isEdit ? (
 					<button
@@ -280,6 +268,28 @@ function EachPassWord({
 				)}
 			</div>
 		</form>
+	)
+}
+
+function ShowPassword({ password, isEdit }: { password: string | undefined; isEdit: boolean }) {
+	const [isShowPassWord, setIsShowPassWord] = useState(false)
+
+	return (
+		<div className="text-sm flex relative justify-center items-center gap-5">
+			<input
+				type={isShowPassWord ? "text" : "password"}
+				name="password"
+				className="py-3 px-1 border border-black outline-none rounded-xl"
+				defaultValue={password}
+				readOnly={!isEdit}
+			/>
+			<Button
+				className="absolute left-0 top-3"
+				onClick={() => setIsShowPassWord((prv) => !prv)}
+				variant={"secondary"}>
+				show
+			</Button>
+		</div>
 	)
 }
 

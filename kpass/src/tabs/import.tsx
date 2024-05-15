@@ -3,7 +3,8 @@ import {
 	createColumnHelper,
 	flexRender,
 	getCoreRowModel,
-	useReactTable
+	useReactTable,
+	type Cell
 } from "@tanstack/react-table"
 import Papa from "papaparse"
 import React, { useState } from "react"
@@ -77,7 +78,7 @@ const steps: Steps = {
 	]
 }
 
-type ArrayOfPasswords = Array<Omit<Readonly<Password & { username: string }>, "ID">>
+type ArrayOfPasswords = Array<Partial<Omit<Password & { username: string }, "ID">>>
 
 function covertArrayToArrayOfPasswords(
 	array: Papa.ParseResult<unknown>,
@@ -87,7 +88,7 @@ function covertArrayToArrayOfPasswords(
 	const headers = array.data[0] as string[]
 	if (passwordManager == "google-chrome") {
 		passwords = (array.data as Array<string[]>).map((row, i) => {
-			const singleRow: ArrayOfPasswords[number] = {}
+			const singleRow: Partial<ArrayOfPasswords[number]> = {}
 			row.forEach((p, i) => {
 				const key = headers[i]
 				if (!["url", "username", "password"].includes(key)) return
@@ -166,7 +167,6 @@ const columns = [
 		cell: (info) => info.getValue(),
 		footer: (info) => info.column.id
 	}),
-
 	columnHelper.accessor("username", {
 		header: () => "username",
 		cell: (info) => info.renderValue(),
@@ -217,17 +217,20 @@ function App({ passwords }: { passwords: ArrayOfPasswords }) {
 	})
 
 	const table = useReactTable({
-		data: passwords.map((p) => ({
-			...p,
-			host: (() => {
-				try {
-					return new URL(p.url).host
-				} catch (err) {
-					console.log(err)
-					return p.url
-				}
-			})()
-		})),
+		data: passwords
+			.map((p) => ({
+				...p,
+				username: p.username || "",
+				host: (() => {
+					try {
+						return new URL(p.url || "").host || null
+					} catch (err) {
+						console.log(err)
+						return p.url || null
+					}
+				})()
+			}))
+			.filter((p): p is Password & { username: string; host: string | null } => p.id !== undefined),
 		columns,
 		getCoreRowModel: getCoreRowModel()
 	})
@@ -277,9 +280,7 @@ function App({ passwords }: { passwords: ArrayOfPasswords }) {
 						{table.getRowModel().rows.map((row) => (
 							<tr key={row.id}>
 								{row.getVisibleCells().map((cell) => (
-									<td key={cell.id} className="px-6 max-w-96 py-4 whitespace-nowrap ">
-										{flexRender(cell.column.columnDef.cell, cell.getContext())}
-									</td>
+									<RenderCell cell={cell} />
 								))}
 							</tr>
 						))}
@@ -309,5 +310,34 @@ function App({ passwords }: { passwords: ArrayOfPasswords }) {
 				save
 			</Button>
 		</div>
+	)
+}
+
+function RenderCell({
+	cell
+}: {
+	cell: Cell<Password & { username: string; host: string | null }, unknown>
+}) {
+	const [isShowPassWord, setShowPassword] = useState(false)
+	const isPassword = cell.column.id === "password"
+
+	if (!isPassword)
+		return <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
+
+	return (
+		<td key={cell.id}>
+			<div className="w-full flex justify-center items-center gap-3">
+				{!isShowPassWord ? (
+					<div>
+						<div>"*******"</div>
+					</div>
+				) : (
+					flexRender(cell.column.columnDef.cell, cell.getContext())
+				)}
+				<div>
+					<Button onClick={() => setShowPassword((prv) => !prv)}>show</Button>
+				</div>
+			</div>
+		</td>
 	)
 }
