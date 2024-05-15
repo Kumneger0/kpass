@@ -108,9 +108,16 @@ function IndexPopup() {
 					)}
 				</div>
 				<div className="flex items-center justify-center mt-10">
-					<a href="/tabs/home.html" target="_blank">
-						<Button variant="link">Dashbord</Button>
-					</a>
+					<div>
+						<a href="/tabs/home.html" target="_blank">
+							<Button variant="link">Dashbord</Button>
+						</a>
+					</div>
+					<div>
+						<a target="_blank" href="/tabs/import.html">
+							<Button variant="link">import/export passwords</Button>
+						</a>
+					</div>
 				</div>
 			</div>
 		)

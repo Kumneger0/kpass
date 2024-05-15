@@ -123,7 +123,7 @@ const getInputElements = () => {
 	return crendentials
 }
 
-function isInKey<Tobj extends object>(obj: Tobj, key: PropertyKey): key is keyof Tobj {
+export function isInKey<Tobj extends object>(obj: Tobj, key: PropertyKey): key is keyof Tobj {
 	return key in obj
 }
 
