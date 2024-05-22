@@ -30,6 +30,7 @@ const App = () => {
 	const [isLogin, setIsLogin] = useState(false)
 	const [baseURL, setBaseURL] = useState<string | null>("")
 	const inputRef = useRef<HTMLInputElement>(null)
+	const errorRef = useRef<HTMLSpanElement>(null)
 
 	useEffect(() => {
 		storage.get("base-url").then((baseURL) => setBaseURL(baseURL!))
@@ -37,31 +38,42 @@ const App = () => {
 
 	if (!baseURL)
 		return (
-			<div>
-				<h1>Enter Server URL</h1>
-				<div>
-					<input
-						ref={inputRef}
-						type="url"
-						onInvalid={() => alert("please enter valid input")}
-						placeholder="Enter Server URL"
-					/>
-					<button
-						onClick={async () => {
-							const serverURL = inputRef.current?.value
-							if (!serverURL) {
-								alert("please enter url")
-								return
-							}
-							try {
-								await storage.set("base-url", serverURL)
-								setBaseURL(serverURL)
-							} catch (err) {
-								console.error(err)
-							}
-						}}>
-						save
-					</button>
+			<div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 py-2">
+				<div className="max-w-md w-full space-y-8">
+					<div>
+						<h1 className="text-4xl font-bold text-center text-gray-800">Enter Server URL</h1>
+					</div>
+					<div className="flex flex-col items-center">
+						<input
+							ref={inputRef}
+							type="url"
+							placeholder="Enter Server URL"
+							className="w-full px-4 py-2 mt-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+							onInvalid={(e) => e.currentTarget.setCustomValidity("Please enter a valid URL")}
+						/>
+						<span
+							ref={errorRef}
+							className="text-red-600 text-xs mt-2 hidden"
+							id="invalid-url-message"></span>
+						<button
+							onClick={async () => {
+								const serverURL = inputRef.current?.value
+								if (!serverURL) {
+									errorRef.current?.classList.remove("hidden")
+									return
+								}
+								try {
+									await storage.set("base-url", serverURL)
+									setBaseURL(serverURL)
+									errorRef.current?.classList.add("hidden")
+								} catch (err) {
+									console.error(err)
+								}
+							}}
+							className="mt-4 px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-150 ease-in-out">
+							Save
+						</button>
+					</div>
 				</div>
 			</div>
 		)

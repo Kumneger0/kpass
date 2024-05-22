@@ -13,9 +13,7 @@ import { getUserData, saveNewPassword } from "../tabs/home"
 import { passwordSchema, userStore, type AccessToken, type Password, type User } from "../utils"
 
 const queryClient = new QueryClient()
-
 const BASEURL = "http://localhost:8080"
-
 const App = () => {
 	return (
 		<QueryClientProvider client={queryClient}>
@@ -44,12 +42,10 @@ export const updatePassword = async ({ accessToken, id, body }: UpdateParams) =>
 	const data = (await response?.json()) as User
 	return data
 }
-
 async function onMutaionSuccess() {
 	window.close()
 	await storage.remove("credential")
 }
-
 export const deletePassword = async ({ accessToken, id }: Omit<UpdateParams, "body">) => {
 	if (!id || !accessToken) throw Error("id is required to delete")
 	const url = `${BASEURL}/passwords/delete/${id}`
