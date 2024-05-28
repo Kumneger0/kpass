@@ -32,6 +32,10 @@ type Password struct {
 	DeletedAt   gorm.DeletedAt `gorm:"index"`
 }
 
+
+
+
+
 func ConnectToDB() (*gorm.DB, error) {
 	_ = godotenv.Load()
 	dsn := os.Getenv("PSG_URL")

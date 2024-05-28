@@ -10,13 +10,17 @@ import Papa from "papaparse"
 import React, { useState } from "react"
 
 import { Button } from "~components/button"
-import { isInKey } from "~contents/content"
+// import { isInKey } from "~contents/content"
 import { storage } from "~popup"
 
 import { Card, CardContent, CardHeader, CardTitle } from "../components/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/Select"
 import { type Password } from "../utils"
 import { saveNewPassword } from "./home"
+
+export function isInKey<Tobj extends object>(obj: Tobj, key: PropertyKey): key is keyof Tobj {
+	return key in obj
+}
 
 const queryClient = new QueryClient()
 
@@ -235,23 +239,17 @@ function App({ passwords }: { passwords: ArrayOfPasswords }) {
 		getCoreRowModel: getCoreRowModel()
 	})
 
-	if (isPending) return <div>loading</div>
+	if (isPending) return <div className="p-2 max-w-5xl mx-auto ">loading</div>
 
 	if (data) {
 		return (
-			<div>
-				<div>success Result</div>
+			<div className="p-2 max-w-5xl mx-auto w-full flex justify-center ite">
 				<div>
-					{data.successResult.map(({ value }) => (
-						<div>
-							<div>{value.url}</div>
-							<div>{value.email}</div>
-						</div>
-					))}
-				</div>
-				<div>
-					<div>faliled result </div>
-					<div>{data.failedResult.length} passwords aren't saved</div>
+					<h2>Result</h2>
+					<p>
+						out of {data.successResult.length + data.failedResult.length} you have successfully
+						saved {data.successResult.length}{" "}
+					</p>
 				</div>
 			</div>
 		)
@@ -335,7 +333,9 @@ function RenderCell({
 					flexRender(cell.column.columnDef.cell, cell.getContext())
 				)}
 				<div>
-					<Button onClick={() => setShowPassword((prv) => !prv)}>show</Button>
+					<Button onClick={() => setShowPassword((prv) => !prv)}>
+						{isShowPassWord ? "hide" : "show"}
+					</Button>
 				</div>
 			</div>
 		</td>

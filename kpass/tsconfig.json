@@ -11,11 +11,11 @@
 	"compilerOptions": {
 		"strict": true,
 		"jsx": "react",
+		"module": "NodeNext",
+		"moduleResolution": "Node",
 		"esModuleInterop": true,
 		"paths": {
-			"~*": [
-				"./src/*"
-			]
+			"~*": ["./src/*"]
 		},
 		"baseUrl": "."
 	}

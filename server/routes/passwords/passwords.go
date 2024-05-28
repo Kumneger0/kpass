@@ -227,6 +227,7 @@ func DeletePassword(w http.ResponseWriter, r *http.Request) {
 		jsonEror, _ := json.Marshal(users.ERROR{Message: result.Error.Error()})
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write(jsonEror)
+		return
 	}
 	message := make(map[string]string)
 	message["message"] = "deleted"

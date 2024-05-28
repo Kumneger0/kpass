@@ -1,12 +1,17 @@
-import { ZodError } from "zod"
+import { ZodError } from "zod";
 
-import { storage } from "~popup"
-import { getUserData } from "~tabs/home"
-import { passwordSchema, type User } from "~utils"
+
+
+import { storage } from "~popup";
+import { getUserData } from "~tabs/home";
+import { passwordSchema, type User } from "~utils";
+
+
 
 //@ts-expect-error Cannot find module '../../assets/icon.png' or its corresponding type declarations.ts(2307)
 
-import logo from "../../assets/icon.png"
+import logo from "../../assets/icon.png";
+
 
 const supportedInputTypes = ["text", "password", "email", "tel"]
 const inputElementToFill: HTMLInputElement[] = []
@@ -27,7 +32,6 @@ const revalidateToken = async () => {
 revalidateToken()
 // addIcon()
 
-function addStyles(elem: HTMLElement, style: CSSStyleDeclaration) {
 
   const dialog = document.createElement("dialog")
   dialog.style.position = "absolute"
@@ -98,7 +102,6 @@ function addStyles(elem: HTMLElement, style: CSSStyleDeclaration) {
       }
     })
   }
-
   const getInputElements = () => {
     const crendentials = {
       url: location.origin,
@@ -271,4 +274,4 @@ function addStyles(elem: HTMLElement, style: CSSStyleDeclaration) {
     !dialog.open && dialog.showModal()
   }
 
-  // export { }
+  export { }
