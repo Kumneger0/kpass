@@ -1,36 +1,23 @@
 import { passwordSchema, userStore, type AccessToken, type Password, type User } from "~utils";
 
-
-
 import { Button } from "../components/button";
 
-
-
 import "../style.css";
-
-
 
 import { QueryClient, QueryClientProvider, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import React, { useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { z, ZodError } from "zod";
 
-
-
 import { storage } from "~popup";
-
-
-
+ 
 import { Dialog, DialogContent, DialogTrigger } from "../components/dialog";
 import { deletePassword, updatePassword, type UpdateParams } from "./savePassword";
-
-
-const queryClient = new QueryClient()
-
-const Home = () => {
-	return (
-		<div>
+const queryClient = new QueryClient()   
+const Home = () => {    
+	return (  
+		<div>  
 			<QueryClientProvider client={queryClient}>
-				<Component />
+				<Component />   
 			</QueryClientProvider>
 		</div>
 	)

@@ -6,12 +6,9 @@ import "../style.css"
 
 import { QueryClient, QueryClientProvider, useMutation, useQuery } from "@tanstack/react-query"
 import { date, type TypeOf, type z } from "zod"
-
 import { Button } from "~components/button"
-
 import { getUserData, saveNewPassword } from "../tabs/home"
 import { passwordSchema, userStore, type AccessToken, type Password, type User } from "../utils"
-
 const queryClient = new QueryClient()
 const BASEURL = "http://localhost:8080"
 const App = () => {

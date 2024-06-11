@@ -9,9 +9,7 @@ import React, {
 } from "react"
 
 import { loginSchema, signupSchema, userStore, type User } from "./utils"
-
 import "./style.css"
-
 import {
 	QueryClient,
 	QueryClientProvider,
