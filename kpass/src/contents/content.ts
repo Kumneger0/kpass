@@ -41,7 +41,7 @@ const parentElement = inputElements.length
 	? getCommonParentElement(inputElements[0], inputElements)
 	: null
 const kpassContainer = document.createElement("div")
-if (parentElement) {
+if (parentElement && inputElements.some(ele => ele.type == 'password')) {
 	kpassContainer.id = "kpass-container"
 	parentElement.appendChild(kpassContainer)
 }
