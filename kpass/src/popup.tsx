@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from "react"
 
-import { loginSchema, signupSchema  } from "./utils"
+import { loginSchema, signupSchema } from "./utils"
+
 import "./style.css"
 
 import {
@@ -9,28 +10,21 @@ import {
 	useMutation,
 	useQueryClient
 } from "@tanstack/react-query"
-import {  z } from "zod"
+import { z } from "zod"
 
 import { Storage } from "@plasmohq/storage"
 
+import { createUser } from "~api/users"
 import { Button } from "~components/button"
-
-const KapssContext = createContext<{
-	isLogin: boolean
-	setIsLogin: React.Dispatch<React.SetStateAction<boolean>> | null
-	baseURL: string
-}>({ isLogin: false, setIsLogin: null, baseURL: "" })
+import { KapssContext, useKpassContext } from "~context"
 
 const queryClient = new QueryClient()
-
 export const storage = new Storage()
-
 const App = () => {
 	const [isLogin, setIsLogin] = useState(false)
 	const [baseURL, setBaseURL] = useState<string | null>("")
 	const inputRef = useRef<HTMLInputElement>(null)
 	const errorRef = useRef<HTMLSpanElement>(null)
-
 	useEffect(() => {
 		storage.get("base-url").then((baseURL) => setBaseURL(baseURL!))
 	}, [])
@@ -94,15 +88,10 @@ export default App
 
 function IndexPopup() {
 	const [accessToken, setAcessToken] = useState<string | null | undefined>("")
-
-	const { isLogin } = useContext(KapssContext)
-
+	const { isLogin } = useKpassContext()
 	useEffect(() => {
 		storage.get("accessToken").then(setAcessToken)
 	}, [])
-
-	console.log(accessToken, "accessToken")
-
 	if (!!accessToken)
 		return (
 			<div className="w-full max-w-sm p-4 bg-white">
@@ -138,47 +127,13 @@ function IndexPopup() {
 	return <SignUP />
 }
 
-async function registerUser(user: z.infer<typeof signupSchema>, BASEURL: string) {
-	const signupUrl = `${BASEURL}/users/new`
-	const response = await fetch(signupUrl, {
-		method: "POST",
-		headers: {
-			"Content-Type": "application/json"
-		},
-		body: JSON.stringify(user)
-	})
-
-	if (response.ok)
-		return {
-			status: "success",
-			data: (await response.json()) as typeof user
-		} as const
-	return {
-		status: "failed",
-		data: (await response.json()) as { message: string }
-	} as const
-}
-
 function SignUP() {
-	const { setIsLogin, baseURL } = useContext(KapssContext)
-
 	const formRef = React.useRef<HTMLFormElement>(null)
 	const [error, setIsError] = React.useState<string | null>(null)
 	const [isLoading, setIsLoading] = React.useState(false)
 	const [showPassWord, setShowPassword] = React.useState(false)
-
-	const queryClient = useQueryClient()
-
-	const { isPending, mutateAsync } = useMutation({
-		onSuccess: () => {
-			queryClient.invalidateQueries()
-		},
-		mutationKey: ["signup"],
-		mutationFn: (data: z.infer<typeof signupSchema>) => {
-			return registerUser(data, baseURL)
-		}
-	})
-
+	const { isPending, mutateAsync } = createUser()
+	const { setIsLogin } = useKpassContext()
 	async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
 		e.preventDefault()
 		setIsLoading(true)

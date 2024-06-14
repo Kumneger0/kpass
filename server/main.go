@@ -2,13 +2,12 @@ package main
 
 import (
 	"fmt"
+	"github.com/joho/godotenv"
+	"github.com/rs/cors"
 	"log"
 	"net/http"
 	"server/routes/passwords"
 	"server/routes/users"
-
-	"github.com/joho/godotenv"
-	"github.com/rs/cors"
 )
 
 func main() {

@@ -1,14 +1,13 @@
-import React, { useEffect, useState } from "react"
+import { QueryClient, QueryClientProvider, useMutation, useQuery } from "@tanstack/react-query"
+import React, { useState } from "react"
+import { type z } from "zod"
+
+import { Button } from "~components/button"
 
 import { storage } from "../popup"
-
-import "../style.css"
-
-import { QueryClient, QueryClientProvider, useMutation, useQuery } from "@tanstack/react-query"
-import { date, type TypeOf, type z } from "zod"
-import { Button } from "~components/button"
 import { getUserData, saveNewPassword } from "../tabs/home"
-import { passwordSchema, userStore, type AccessToken, type Password, type User } from "../utils"
+import { passwordSchema, type AccessToken, type Password, type User } from "../utils"
+
 const queryClient = new QueryClient()
 const BASEURL = "http://localhost:8080"
 const App = () => {
@@ -19,7 +18,6 @@ const App = () => {
 	)
 }
 export default App
-
 export type UpdateParams = {
 	accessToken: AccessToken
 	id: string | number
@@ -63,9 +61,7 @@ function IndexOptions() {
 		queryKey: ["token"],
 		queryFn: async () => await storage.get("accessToken")
 	})
-
 	const [selectedId, setSelectedId] = useState<string | number | null | undefined>(null)
-
 	const {
 		isPending,
 		isError,
@@ -87,23 +83,13 @@ function IndexOptions() {
 			>
 	})
 
-	const {
-		data,
-		isPending: isUpdatePending,
-		isError: isUpdateError,
-		error,
-		mutate
-	} = useMutation({
+	const { mutate } = useMutation({
 		mutationKey: ["updatePassword"],
 		mutationFn: (arg: UpdateParams) => updatePassword(arg),
 		onSuccess: onMutaionSuccess,
 		onError: console.error
 	})
-	const {
-		isPending: isCreatePending,
-		isError: isCreateError,
-		mutateAsync
-	} = useMutation({
+	const { mutateAsync } = useMutation({
 		mutationKey: ["savePassword"],
 		mutationFn: () => saveNewPassword(credential as Password, accessToken as string),
 		onSuccess: onMutaionSuccess,

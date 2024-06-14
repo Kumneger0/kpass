@@ -1,5 +1,4 @@
 export {}
-console.log("HELLO WORLD FROM BGSCRIPTS")
 
 chrome.runtime.onMessage.addListener(function (
 	request: { message: string; data: Record<string, unknown> },
@@ -8,7 +7,6 @@ chrome.runtime.onMessage.addListener(function (
 ) {
 	try {
 		chrome.storage.local.set({ formData: request.data }, function () {
-			console.log("Data saved")
 			sendResponse({ status: "Data saved" })
 		})
 	} catch (err) {
