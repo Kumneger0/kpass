@@ -1,14 +1,6 @@
-import React, {
-	createContext,
-	useContext,
-	useEffect,
-	useRef,
-	useState,
-	type Dispatch,
-	type SetStateAction
-} from "react"
+import React, { createContext, useContext, useEffect, useRef, useState } from "react"
 
-import { loginSchema, signupSchema, userStore, type User } from "./utils"
+import { loginSchema, signupSchema } from "./utils"
 
 import "./style.css"
 
@@ -18,85 +10,73 @@ import {
 	useMutation,
 	useQueryClient
 } from "@tanstack/react-query"
-import { set, z } from "zod"
+import { z } from "zod"
 
 import { Storage } from "@plasmohq/storage"
 
+import { createUser } from "~api/users"
 import { Button } from "~components/button"
-
-const KapssContext = createContext<{
-	isLogin: boolean
-	setIsLogin: React.Dispatch<React.SetStateAction<boolean>> | null
-	baseURL: string
-	setBaseURL?: Dispatch<SetStateAction<string>>
-}>({ isLogin: false, setIsLogin: null, baseURL: "" })
+import { KapssContext, useKpassContext } from "~context"
 
 const queryClient = new QueryClient()
-
 export const storage = new Storage()
-
-const ServerURLFORM = () => {
-	const { setBaseURL } = useContext(KapssContext)
-
-	const inputRef = useRef<HTMLInputElement>(null)
-	const errorRef = useRef<HTMLSpanElement>(null)
-
-	return (
-		<div className="flex flex-col items-center justify-center bg-gray-100 py-2">
-			<div className="max-w-md w-full space-y-8">
-				<div>
-					<h1 className="text-4xl font-bold text-center text-gray-800">Enter Server URL</h1>
-				</div>
-				<div className="flex flex-col items-center">
-					<input
-						ref={inputRef}
-						type="url"
-						placeholder="Enter Server URL"
-						className="w-full px-4 py-2 mt-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
-						onInvalid={(e) => e.currentTarget.setCustomValidity("Please enter a valid URL")}
-					/>
-					<span
-						ref={errorRef}
-						className="text-red-600 text-xs mt-2 hidden"
-						id="invalid-url-message"></span>
-					<button
-						onClick={async () => {
-							const serverURL = inputRef.current?.value
-							if (!serverURL) {
-								errorRef.current?.classList.remove("hidden")
-								return
-							}
-							try {
-								await storage.set("base-url", serverURL)
-								setBaseURL && setBaseURL(serverURL)
-								errorRef.current?.classList.add("hidden")
-							} catch (err) {
-								console.error(err)
-							}
-						}}
-						className="mt-4 px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-150 ease-in-out">
-						Save
-					</button>
-				</div>
-			</div>
-		</div>
-	)
-}
-
 const App = () => {
 	const [isLogin, setIsLogin] = useState(false)
-	const [baseURL, setBaseURL] = useState<string>("")
-
+	const [baseURL, setBaseURL] = useState<string | null>("")
+	const inputRef = useRef<HTMLInputElement>(null)
+	const errorRef = useRef<HTMLSpanElement>(null)
 	useEffect(() => {
 		storage.get("base-url").then((baseURL) => setBaseURL(baseURL!))
 	}, [])
 
+	if (!baseURL)
+		return (
+			<div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 py-2">
+				<div className="max-w-md w-full space-y-8">
+					<div>
+						<h1 className="text-4xl font-bold text-center text-gray-800">Enter Server URL</h1>
+					</div>
+					<div className="flex flex-col items-center">
+						<input
+							ref={inputRef}
+							type="url"
+							placeholder="Enter Server URL"
+							className="w-full px-4 py-2 mt-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+							onInvalid={(e) => e.currentTarget.setCustomValidity("Please enter a valid URL")}
+						/>
+						<span
+							ref={errorRef}
+							className="text-red-600 text-xs mt-2 hidden"
+							id="invalid-url-message"></span>
+						<button
+							onClick={async () => {
+								const serverURL = inputRef.current?.value
+								if (!serverURL) {
+									errorRef.current?.classList.remove("hidden")
+									return
+								}
+								try {
+									await storage.set("base-url", serverURL)
+									setBaseURL(serverURL)
+									errorRef.current?.classList.add("hidden")
+								} catch (err) {
+									console.error(err)
+								}
+							}}
+							className="mt-4 px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-150 ease-in-out">
+							Save
+						</button>
+					</div>
+				</div>
+			</div>
+		)
+
 	return (
-		<KapssContext.Provider value={{ isLogin, setIsLogin, baseURL, setBaseURL }}>
+		<KapssContext.Provider value={{ isLogin, setIsLogin, baseURL }}>
 			<QueryClientProvider client={queryClient}>
 				<div className="w-96 mx-auto">
 					<h3 className="font-bold text-2xl my-2 p-3">KPass Privicy first password manager </h3>
-					{baseURL ? <IndexPopup /> : <ServerURLFORM />}
+					<IndexPopup />
 					<footer className="font-bold text-center my-3 p-3 text-lg">Kpass 2024</footer>
 				</div>
 			</QueryClientProvider>
@@ -108,15 +88,10 @@ export default App
 
 function IndexPopup() {
 	const [accessToken, setAcessToken] = useState<string | null | undefined>("")
-
-	const { isLogin } = useContext(KapssContext)
-
+	const { isLogin } = useKpassContext()
 	useEffect(() => {
 		storage.get("accessToken").then(setAcessToken)
 	}, [])
-
-	console.log(accessToken, "accessToken")
-
 	if (!!accessToken)
 		return (
 			<div className="w-full max-w-sm p-4 bg-white">
@@ -152,47 +127,13 @@ function IndexPopup() {
 	return <SignUP />
 }
 
-async function registerUser(user: z.infer<typeof signupSchema>, BASEURL: string) {
-	const signupUrl = `${BASEURL}/users/new`
-	const response = await fetch(signupUrl, {
-		method: "POST",
-		headers: {
-			"Content-Type": "application/json"
-		},
-		body: JSON.stringify(user)
-	})
-
-	if (response.ok)
-		return {
-			status: "success",
-			data: (await response.json()) as typeof user
-		} as const
-	return {
-		status: "failed",
-		data: (await response.json()) as { message: string }
-	} as const
-}
-
 function SignUP() {
-	const { setIsLogin, baseURL } = useContext(KapssContext)
-
 	const formRef = React.useRef<HTMLFormElement>(null)
 	const [error, setIsError] = React.useState<string | null>(null)
 	const [isLoading, setIsLoading] = React.useState(false)
 	const [showPassWord, setShowPassword] = React.useState(false)
-
-	const queryClient = useQueryClient()
-
-	const { isPending, mutateAsync } = useMutation({
-		onSuccess: () => {
-			queryClient.invalidateQueries()
-		},
-		mutationKey: ["signup"],
-		mutationFn: (data: z.infer<typeof signupSchema>) => {
-			return registerUser(data, baseURL)
-		}
-	})
-
+	const { isPending, mutateAsync } = createUser()
+	const { setIsLogin } = useKpassContext()
 	async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
 		e.preventDefault()
 		setIsLoading(true)

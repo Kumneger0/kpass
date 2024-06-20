@@ -1,36 +1,21 @@
-import { passwordSchema, userStore, type AccessToken, type Password, type User } from "~utils";
-
-
+import { passwordSchema,  type AccessToken, type Password, type User } from "~utils";
 
 import { Button } from "../components/button";
 
-
-
 import "../style.css";
-
-
 
 import { QueryClient, QueryClientProvider, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import React, { useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { z, ZodError } from "zod";
-
-
-
 import { storage } from "~popup";
-
-
-
 import { Dialog, DialogContent, DialogTrigger } from "../components/dialog";
 import { deletePassword, updatePassword, type UpdateParams } from "./savePassword";
-
-
-const queryClient = new QueryClient()
-
-const Home = () => {
-	return (
-		<div>
+const queryClient = new QueryClient()   
+const Home = () => {    
+	return (  
+		<div>  
 			<QueryClientProvider client={queryClient}>
-				<Component />
+				<Component />   
 			</QueryClientProvider>
 		</div>
 	)
@@ -57,7 +42,6 @@ export const getUserData = async (accessToken: string | null) => {
 
 	return data
 }
-
 function Component() {
 	const [search, setSearch] = useState<string | null>(null)
 
@@ -164,32 +148,25 @@ function EachPassWord({
 	const queryClient = useQueryClient()
 
 	const {
-		data,
-		isPending: isUpdatePending,
-		isError: isUpdateError,
-		error,
-		mutate
+	mutate
 	} = useMutation({
 		mutationKey: ["updatePassword"],
 		mutationFn: (arg: UpdateParams) => updatePassword(arg),
-		onSuccess(data, variables, context) {
+		onSuccess(_data, _variables, _context) {
 			queryClient.invalidateQueries()
 			setIsEdit(false)
 		},
-		onError(error, variables, context) {
+		onError(error, _variables, _context) {
 			console.log(error)
 			alert(error.message)
 		}
 	})
 	const {
-		isPending: isDeltePending,
-		isError: isDeleteEr,
-		error: deleteErroe,
 		mutate: deletePass
 	} = useMutation({
 		mutationKey: ["deletePassword"],
 		mutationFn: (arg: Omit<UpdateParams, "body">) => deletePassword(arg),
-		onSuccess(data, variables, context) {
+		onSuccess(_data, _variables, _context) {
 			queryClient.invalidateQueries()
 			setIsEdit(false)
 		},
