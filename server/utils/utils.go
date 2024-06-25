@@ -3,49 +3,44 @@ package utils
 import (
 	"fmt"
 
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 	"os"
 	"time"
 
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
-
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/joho/godotenv"}
-)                           }
-                            })
-type User struct {          return nil, err
-	gorm.Model                }
-	Email          string     }, Password{}); err != nil {                                                    `json:"email" gorm:"uniqueIndex"`
-	MasterPassword string     }                                                                               `json:"masterPassword"`
-	Passwords      []Password return db, nil                                                                  `json:"passwords" gorm:"foreignKey:UserID"`
-	DeletedAt      gorm.Delete}}                                                                                                                                                      dAt `gorm:"index"`
-}                           }}                                                                           )
-                            r})                                                                          eturn "", err
-type Password struct {      }return nil, err
-	gorm.Model                r}                                                                           eturn tokenString, nil
-	Username    string        }}, Password{}); err != nil {                                                                                                                            `json:"username" `
-	Url         string        }}                                                                           , error) {                                                                  `json:"url"`
-	Email       string        rreturn db, nil                                                              eturn nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"]) `json:"email"`
-	PhoneNumber string        }}                                                                                                                                                       `json:"phoneNumber"`
-	Password    string        r})                                                                          eturn secretKey, nil                                                        `json:"password"`
-	UserID      uint          }return "", err                                                              )                                                                           `gorm:"column:user_id"`
-	DeletedAt   gorm.DeletedAtr}                                                                           eturn 0, err                                                                `gorm:"index"`
-}                           }return tokenString, nil
-                            r}                                                                           eturn 0, fmt.Errorf("claim 'user_id' not found or not a number")
-                            }}, error) {
-                            rreturn nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])eturn uint(userID), nil
-                            }}                                                                            else {
-                            rreturn secretKey, nil                                                       eturn 0, fmt.Errorf("invalid token")
-func ConnectToDB() (*gorm.DB}})                                                                                                                                                     , error) {
-	_ = godotenv.Load()       }return 0, err
-	dsn := os.Getenv("PSG_URL")}
-                             return 0, fmt.Errorf("claim 'user_id' not found or not a number")
-	db, err := gorm.Open(postgr}                                                                           es.Open(dsn), &gorm.Config{})
-	if err != nil {            return uint(userID), nil
-		return nil, err          } else {
-	}                          return 0, fmt.Errorf("invalid token")
-                             }
-	fmt.Println("connected to p}                                                                           ostgres database")
+	"github.com/joho/godotenv"
+)
+
+type User struct {
+	gorm.Model
+	Email          string         `json:"email" gorm:"uniqueIndex"`
+	MasterPassword string         `json:"masterPassword"`
+	Passwords      []Password     `json:"passwords" gorm:"foreignKey:UserID"`
+	DeletedAt      gorm.DeletedAt `gorm:"index"`
+}
+
+type Password struct {
+	gorm.Model
+	Username    string         `json:"username" `
+	Url         string         `json:"url"`
+	Email       string         `json:"email"`
+	PhoneNumber string         `json:"phoneNumber"`
+	Password    string         `json:"password"`
+	UserID      uint           `gorm:"column:user_id"`
+	DeletedAt   gorm.DeletedAt `gorm:"index"`
+}
+
+func ConnectToDB() (*gorm.DB, error) {
+	_ = godotenv.Load()
+	dsn := os.Getenv("PSG_URL")
+
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Println("connected to postgres database")
 
 	if err = db.AutoMigrate(&User{}, Password{}); err != nil {
 		fmt.Println("failed to migrate")
