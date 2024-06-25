@@ -25,9 +25,7 @@ export default Home
 
 export const getUserData = async (accessToken: string | null) => {
 	const BASEURL = await storage.get("base-url")
-
 	if (!BASEURL) throw new Error("Failed to get server url")
-
 	const url = `${BASEURL}/passwords`
 
 	if (!accessToken) throw Error("please specify access token")
@@ -37,9 +35,7 @@ export const getUserData = async (accessToken: string | null) => {
 			ACCESS_TOKEN: accessToken
 		}
 	})
-
 	const data = (await response?.json()) as User
-
 	return data
 }
 function Component() {

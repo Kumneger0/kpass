@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from "react"
-
 import { loginSchema, signupSchema } from "./utils"
 
 import "./style.css"
@@ -31,7 +30,7 @@ const App = () => {
 
 	if (!baseURL)
 		return (
-			<div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 py-2">
+			<div className="flex min-w-96 flex-col items-center justify-center min-h-screen bg-gray-100 py-2">
 				<div className="max-w-md w-full space-y-8">
 					<div>
 						<h1 className="text-4xl font-bold text-center text-gray-800">Enter Server URL</h1>

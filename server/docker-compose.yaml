@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  web:
+    build: . 
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=postgres://postgres:secret@db:5432/mydatabase
+      - JWT_SECRET=63143f38-9472-4275-a3b7-140aedc2bab0
+  db:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: mydatabase
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+volumes:
+  db_data:
+

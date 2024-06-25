@@ -40,12 +40,28 @@ const inputElements = getInputElemnteReferece()
 const parentElement = inputElements.length
 	? getCommonParentElement(inputElements[0], inputElements)
 	: null
-const kpassContainer = document.createElement("div")
-if (parentElement && inputElements.some(ele => ele.type == 'password')) {
-	kpassContainer.id = "kpass-container"
-	parentElement.appendChild(kpassContainer)
+
+inputElements.forEach((ele) => {
+	console.log("added ")
+	const placeHolderDiv = document.createElement("div")
+	const kpassContainer = document.createElement("div")
+	addStyles(ele.parentElement)
+	addKpassLogo(kpassContainer)
+	ele?.parentElement?.appendChild(placeHolderDiv)
+	ele.after(placeHolderDiv, kpassContainer)
+	const root = createRoot(kpassContainer)
+	root.render(React.createElement(App, null, null))
+})
+
+function addStyles(ele: HTMLElement | null) {
+	if (!ele) return
+	ele.style.position = "relative"
 }
 
-const root = createRoot(kpassContainer)
-root.render(React.createElement(App, null, null))
+function addKpassLogo(kpassContainer: HTMLElement) {
+	kpassContainer.style.position = "absolute"
+	kpassContainer.style.right = "10px"
+	kpassContainer.style.top = "10px"
+}
+
 export {}
