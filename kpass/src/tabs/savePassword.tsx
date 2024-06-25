@@ -3,10 +3,10 @@ import React, { useState } from "react"
 import { type z } from "zod"
 
 import { Button } from "~components/button"
+import type { AccessToken, Password, User } from "~types"
 
-import { storage } from "../popup"
 import { getUserData, saveNewPassword } from "../tabs/home"
-import { passwordSchema, type AccessToken, type Password, type User } from "../utils"
+import { passwordSchema, storage } from "../utils"
 
 const queryClient = new QueryClient()
 const BASEURL = "http://localhost:8080"
@@ -102,7 +102,7 @@ function IndexOptions() {
 	if (isPending || isCredeitialPending) return <div>please wait</div>
 	if (isError || isCredeitialError) return <div>there was an error occured</div>
 
-	const previousPassword = user.passwords.filter(
+	const previousPassword = (user as User)?.passwords.filter(
 		({ url }) => url.toLowerCase().trim() == credential?.url?.toLowerCase()?.trim()
 	)
 

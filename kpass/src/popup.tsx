@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from "react"
-import { loginSchema, signupSchema } from "./utils"
+
+import { loginSchema, signupSchema, storage } from "./utils"
 
 import "./style.css"
 
@@ -11,21 +12,18 @@ import {
 } from "@tanstack/react-query"
 import { z } from "zod"
 
-import { Storage } from "@plasmohq/storage"
-
 import { createUser } from "~api/users"
 import { Button } from "~components/button"
 import { KapssContext, useKpassContext } from "~context"
 
 const queryClient = new QueryClient()
-export const storage = new Storage()
 const App = () => {
 	const [isLogin, setIsLogin] = useState(false)
 	const [baseURL, setBaseURL] = useState<string | null>("")
 	const inputRef = useRef<HTMLInputElement>(null)
 	const errorRef = useRef<HTMLSpanElement>(null)
 	useEffect(() => {
-		storage.get("base-url").then((baseURL) => setBaseURL(baseURL!))
+		storage.get("base-url").then((baseURL : string) => setBaseURL(baseURL))
 	}, [])
 
 	if (!baseURL)
@@ -82,9 +80,7 @@ const App = () => {
 		</KapssContext.Provider>
 	)
 }
-
 export default App
-
 function IndexPopup() {
 	const [accessToken, setAcessToken] = useState<string | null | undefined>("")
 	const { isLogin } = useKpassContext()

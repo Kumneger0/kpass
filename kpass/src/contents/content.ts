@@ -1,7 +1,10 @@
 import React from "react"
 import { createRoot } from "react-dom/client"
+import { ZodError } from "zod"
 
-import App from "../components/App"
+import { passwordSchema, storage } from "~utils"
+
+import App from "../contentComponent/App"
 
 const supportedInputTypes = ["text", "password", "email", "tel"]
 function getInputElemnteReferece() {
@@ -42,7 +45,6 @@ const parentElement = inputElements.length
 	: null
 
 inputElements.forEach((ele) => {
-	console.log("added ")
 	const placeHolderDiv = document.createElement("div")
 	const kpassContainer = document.createElement("div")
 	addStyles(ele.parentElement)
@@ -60,8 +62,57 @@ function addStyles(ele: HTMLElement | null) {
 
 function addKpassLogo(kpassContainer: HTMLElement) {
 	kpassContainer.style.position = "absolute"
-	kpassContainer.style.right = "10px"
-	kpassContainer.style.top = "10px"
+	kpassContainer.style.right = "0"
+	kpassContainer.style.top = "-15px"
 }
-
+function isInKey<Tobj extends object>(obj: Tobj, key: PropertyKey): key is keyof Tobj {
+	return key in obj
+}
+document.onsubmit = async (e) => {
+	const formValue = getSubmittedUserInputs()
+	try {
+		Object.keys(formValue).forEach((key) => {
+			if (isInKey(formValue, key)) {
+				if (formValue[key] === "") {
+					delete formValue[key]
+				}
+			}
+		})
+		const result = passwordSchema.parse(formValue)
+		await storage.set("credential", formValue)
+		chrome.runtime.sendMessage({ message: "setTopic", data: Credential }, function (response) {
+			console.log("response", response)
+		})
+	} catch (err) {
+		console.log(err)
+		if (err instanceof Error) {
+			console.log(err.message)
+		}
+		if (err instanceof ZodError) {
+			console.log(err.errors[0].message)
+		}
+	}
+}
+const getSubmittedUserInputs = () => {
+	const formValue = {
+		url: location.origin,
+		email: "",
+		password: "",
+		phoneNumber: "",
+		username: ""
+	}
+	inputElements.forEach((elem) => {
+		if (!supportedInputTypes.includes(elem.type)) return
+		if (elem.type == "password") {
+			formValue.password = elem.value
+			return
+		}
+		const name = elem.name
+		const keys = Object.keys(formValue).map((str) => str.toLowerCase())
+		if (keys.includes(name.toLowerCase())) {
+			formValue[name as keyof typeof formValue] = elem.value
+		}
+	})
+	return formValue
+}
 export {}

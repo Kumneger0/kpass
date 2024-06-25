@@ -1,10 +1,8 @@
-# Use the official Golang image as base
 FROM golang:latest
 
 # Set the Current Working Directory inside the container
 WORKDIR /app
 
-# Copy go mod and sum files
 COPY .. .
 
 # Download all dependencies

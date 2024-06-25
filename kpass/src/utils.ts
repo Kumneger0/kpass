@@ -3,7 +3,9 @@ import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { z } from "zod"
 import { create } from "zustand"
+import { Storage } from "@plasmohq/storage"
 import type { User, UserStore } from "~types"
+
 const passwordRegExp = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[$@$!%*?&_])[A-Za-z\d$@$!%*?&_]{6,20}$/
 const emailRegExp = /[A-Z0-9._%+-]+@[A-Z0-9-]+.+.[A-Z]{2,4}/gim
 export const passwordSchema = z.object({
@@ -14,6 +16,7 @@ export const passwordSchema = z.object({
 	password: z.string()
 })
 
+export const storage = new Storage()
 export const signupSchema = z.object({
 	email: z.string().email().regex(emailRegExp, { message: "Invalid email" }),
 	masterPassword: z
