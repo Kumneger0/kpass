@@ -24,14 +24,20 @@ export const getUserData = async (accessToken: string | null) => {
 	const data = (await response?.json()) as User
 	return data
 }
-const popOverContentStyle: React.CSSProperties = {
-	minWidth: "240px",
-	minHeight: "200px",
-	border: "none",
-	background: "white",
-	borderRadius: "10px",
-	backgroundColor: "gray"
-}
+const popoverContentStyle = {
+	padding: "10px", // Add some padding for aesthetics
+	backgroundColor: "#333", // Set a dark background color
+	color: "#fff", // Set white text color for better contrast
+	borderRadius: "4px", // Add rounded corners for a smooth look
+	boxShadow: "0 2px 5px rgba(0, 0, 0, 0.2)", // Subtle shadow for depth
+	fontSize: "14px", // Set a comfortable font size
+	minWidth: "300px",
+	display: "flex",
+	alignItems: "center",
+	flexDirection: "column",
+	maxHeight: "300px",
+	overflowY: "scroll"
+} satisfies React.CSSProperties
 const kpassLogoStyles: React.CSSProperties = {
 	padding: "10px",
 	margin: "10px",
@@ -41,7 +47,7 @@ const kpassLogoStyles: React.CSSProperties = {
 	objectFit: "cover",
 	objectPosition: "center"
 }
-export function PopoverDemo() {
+export function PopoverDemo({ onSelect }: { onSelect: (pass: User["passwords"][number]) => void }) {
 	const popOverTriggerRef = useRef<ElementRef<typeof PopoverTrigger>>(null)
 	const {
 		isPending,
@@ -53,28 +59,49 @@ export function PopoverDemo() {
 	})
 	const passwords =
 		!isPending && !isError
-			? (user as User)?.passwords.filter(({ url }) => new URL(url).origin == location.origin)
+			? (user as User)?.passwords?.filter(({ url }) => url == location.origin)
 			: []
+
 	return (
 		<Popover>
 			{" "}
 			<PopoverTrigger ref={popOverTriggerRef} asChild>
 				<img style={kpassLogoStyles} src={img} alt="kpass_logo" />
 			</PopoverTrigger>
-			<PopoverContent style={popOverContentStyle}>
+			<PopoverContent style={popoverContentStyle}>
 				{isPending ? (
 					<>
-						<div style={{ color: "white" }}>please wait ....</div>
+						<div>please wait ....</div>
 					</>
 				) : (
-					(user as User)?.passwords?.map((pass) => {
+					passwords?.map((pass) => {
 						return (
-							<div key={pass.id} style={{ color: "white" }}>
+							<div
+								key={pass.id}
+								style={{
+									width: "100%",
+									margin: "10px 0",
+									gap: "5px",
+									display: "flex",
+									justifyContent: "space-around"
+								}}>
+								{" "}
 								<Button
 									onClick={() => {
+										onSelect(pass satisfies User["passwords"][number])
 										popOverTriggerRef.current?.click()
+									}}
+									style={{
+										border: "none",
+										width: "100%",
+										padding: "10px",
+										borderRadius: "10px",
+										background: "lightgreen"
 									}}>
 									{pass.email}
+									<span>
+										<PencilIcon />
+									</span>
 								</Button>
 							</div>
 						)
@@ -84,10 +111,44 @@ export function PopoverDemo() {
 		</Popover>
 	)
 }
-export default function App() {
+
+export default function App({ elements }: { elements: HTMLInputElement[] }) {
+	function onSelect(password: User["passwords"][number]) {
+		for (const element of elements) {
+			if (element.type == "password") {
+				element.value = password.password
+				return
+			}
+			if (element.type == "email") {
+				element.value = password.email ?? password.phoneNumber
+				return
+			}
+			element.value = password.email ?? password.phoneNumber
+		}
+	}
+
 	return (
 		<QueryClientProvider client={queryClient}>
-			<PopoverDemo />
+			<PopoverDemo onSelect={onSelect} />
 		</QueryClientProvider>
+	)
+}
+
+function PencilIcon() {
+	return (
+		<svg
+			xmlns="http://www.w3.org/2000/svg"
+			width="24"
+			height="24"
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			stroke-width="2"
+			stroke-linecap="round"
+			stroke-linejoin="round"
+			className="lucide lucide-pencil">
+			<path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" />
+			<path d="m15 5 4 4" />
+		</svg>
 	)
 }

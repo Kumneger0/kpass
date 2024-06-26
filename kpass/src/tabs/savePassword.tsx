@@ -44,7 +44,6 @@ async function onMutaionSuccess() {
 export const deletePassword = async ({ accessToken, id }: Omit<UpdateParams, "body">) => {
 	if (!id || !accessToken) throw Error("id is required to delete")
 	const url = `${BASEURL}/passwords/delete/${id}`
-
 	const response = await fetch(url, {
 		method: "delete",
 		headers: {
@@ -65,6 +64,7 @@ function IndexOptions() {
 	const {
 		isPending,
 		isError,
+		error,
 		data: user
 	} = useQuery({
 		queryKey: ["repoData"],
@@ -97,24 +97,25 @@ function IndexOptions() {
 	})
 
 	if (isTokenPending) return <div>please wait</div>
-	if (!accessToken) return <div>login to strt saving your passwords</div>
+	if (!accessToken) return <div>login to start saving your passwords</div>
 
 	if (isPending || isCredeitialPending) return <div>please wait</div>
-	if (isError || isCredeitialError) return <div>there was an error occured</div>
+	if (isError || isCredeitialError)
+		return <div>{error?.message ?? "there was an error occured"}</div>
 
-	const previousPassword = (user as User)?.passwords.filter(
+	const previousPassword = (user as User)?.passwords?.filter(
 		({ url }) => url.toLowerCase().trim() == credential?.url?.toLowerCase()?.trim()
 	)
 
 	return (
 		<div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
 			<h1 className="text-2xl font-bold mb-4">
-				{!previousPassword.length && <div>Do you want to save your new password?</div>}
+				{!previousPassword?.length && <div>Do you want to save your new password?</div>}
 			</h1>
 
 			<div className="p-4">
 				<h1 className="text-xl font-bold mb-4">
-					{!!previousPassword.length && <span>Your other passwords on {credential.url}</span>}
+					{!!previousPassword?.length && <span>Your other passwords on {credential.url}</span>}
 				</h1>
 				{previousPassword?.map(({ email, ID, password, phoneNumber }) => {
 					return (
@@ -138,7 +139,7 @@ function IndexOptions() {
 			</div>
 
 			<div className="w-full max-w-md p-4 bg-white shadow-md rounded-md">
-				<div>{!!previousPassword.length && <span>Your Current password</span>}</div>
+				<div>{!!previousPassword?.length && <span>Your Current password</span>}</div>
 				{Object.keys(credential)?.map((key) => (
 					<div
 						key={key}
@@ -150,7 +151,6 @@ function IndexOptions() {
 			</div>
 			<div className="flex justify-center mt-4">
 				<div className="mr-2">
-					hover:bg-green-700
 					<Button
 						variant="destructive"
 						className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">

@@ -7,6 +7,8 @@ chrome.runtime.onMessage.addListener(function (
 ) {
 	try {
 		chrome.storage.local.set({ formData: request.data }, function () {})
+		console.log(chrome.action)
+		chrome.action.openPopup()
 	} catch (err) {
 		console.log(err)
 	}

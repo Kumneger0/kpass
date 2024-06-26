@@ -52,7 +52,7 @@ inputElements.forEach((ele) => {
 	ele?.parentElement?.appendChild(placeHolderDiv)
 	ele.after(placeHolderDiv, kpassContainer)
 	const root = createRoot(kpassContainer)
-	root.render(React.createElement(App, null, null))
+	root.render(React.createElement(App, { elements: inputElements }, null))
 })
 
 function addStyles(ele: HTMLElement | null) {

@@ -1,21 +1,31 @@
-import { passwordSchema,  type AccessToken, type Password, type User } from "~utils";
+import { passwordSchema } from "~utils"
 
-import { Button } from "../components/button";
+import { Button } from "../components/button"
 
-import "../style.css";
+import "../style.css"
 
-import { QueryClient, QueryClientProvider, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import React, { useRef, useState, type Dispatch, type SetStateAction } from "react";
-import { z, ZodError } from "zod";
-import { storage } from "~popup";
-import { Dialog, DialogContent, DialogTrigger } from "../components/dialog";
-import { deletePassword, updatePassword, type UpdateParams } from "./savePassword";
-const queryClient = new QueryClient()   
-const Home = () => {    
-	return (  
-		<div>  
+import {
+	QueryClient,
+	QueryClientProvider,
+	useMutation,
+	useQuery,
+	useQueryClient
+} from "@tanstack/react-query"
+import React, { useRef, useState, type Dispatch, type SetStateAction } from "react"
+import { z, ZodError } from "zod"
+
+import type { AccessToken, Password, User } from "~types"
+import { storage } from "~utils"
+
+import { Dialog, DialogContent, DialogTrigger } from "../components/dialog"
+import { deletePassword, updatePassword, type UpdateParams } from "./savePassword"
+
+const queryClient = new QueryClient()
+const Home = () => {
+	return (
+		<div>
 			<QueryClientProvider client={queryClient}>
-				<Component />   
+				<Component />
 			</QueryClientProvider>
 		</div>
 	)
@@ -27,20 +37,20 @@ export const getUserData = async (accessToken: string | null) => {
 	const BASEURL = await storage.get("base-url")
 	if (!BASEURL) throw new Error("Failed to get server url")
 	const url = `${BASEURL}/passwords`
-
+	console.log("url", url)
 	if (!accessToken) throw Error("please specify access token")
+	const response = await fetch(url, { headers: { ACCESS_TOKEN: accessToken } })
 
-	const response = await fetch(url, {
-		headers: {
-			ACCESS_TOKEN: accessToken
-		}
-	})
 	const data = (await response?.json()) as User
+	console.log("passowrds", data)
 	return data
 }
 function Component() {
 	const [search, setSearch] = useState<string | null>(null)
-
+	const { data } = useQuery({
+		queryKey: ["testKey"],
+		queryFn: async () => await storage.get("accessToken")
+	})
 	const {
 		isPending,
 		error,
@@ -68,6 +78,7 @@ function Component() {
 				<div>
 					<Search search={search} setSearch={setSearch} />
 				</div>
+				<div>{data && data}</div>
 				<div className="space-y-4">
 					<div className="grid grid-cols-2 items-center">
 						<h2 className="font-semibold">Total Passwords</h2>
@@ -143,9 +154,7 @@ function EachPassWord({
 
 	const queryClient = useQueryClient()
 
-	const {
-	mutate
-	} = useMutation({
+	const { mutate } = useMutation({
 		mutationKey: ["updatePassword"],
 		mutationFn: (arg: UpdateParams) => updatePassword(arg),
 		onSuccess(_data, _variables, _context) {
@@ -157,9 +166,7 @@ function EachPassWord({
 			alert(error.message)
 		}
 	})
-	const {
-		mutate: deletePass
-	} = useMutation({
+	const { mutate: deletePass, isPending: isUpdatePending } = useMutation({
 		mutationKey: ["deletePassword"],
 		mutationFn: (arg: Omit<UpdateParams, "body">) => deletePassword(arg),
 		onSuccess(_data, _variables, _context) {
@@ -298,7 +305,6 @@ function EyeOffIcon(props: React.SVGProps<SVGSVGElement>) {
 		</svg>
 	)
 }
-
 
 function PlusIcon<T>(props: T) {
 	return (

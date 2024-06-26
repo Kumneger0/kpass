@@ -12,7 +12,6 @@ import (
 
 func GetPasswords(w http.ResponseWriter, r *http.Request) {
 	db := utils.DB
-
 	if db == nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		error := users.ERROR{Message: "internal server error"}
@@ -23,6 +22,7 @@ func GetPasswords(w http.ResponseWriter, r *http.Request) {
 	token := r.Header.Get("ACCESS_TOKEN")
 
 	userId, err := utils.VerifyToken(token)
+	fmt.Println("userid ", userId)
 
 	if err != nil {
 		error := users.ERROR{Message: err.Error(), IsError: true}
@@ -45,7 +45,6 @@ func GetPasswords(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Write(userInJson)
-
 }
 func NewPassword(w http.ResponseWriter, r *http.Request) {
 

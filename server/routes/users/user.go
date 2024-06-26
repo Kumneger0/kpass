@@ -3,12 +3,11 @@ package users
 import (
 	"encoding/json"
 	"fmt"
+	"golang.org/x/crypto/bcrypt"
 	"log"
 	"net/http"
 	"server/utils"
 	"strings"
-
-	"golang.org/x/crypto/bcrypt"
 )
 
 type USERTOKEN struct {
@@ -21,9 +20,7 @@ type ERROR struct {
 }
 
 func GetUsers(w http.ResponseWriter, r *http.Request) {
-
 	db := utils.DB
-
 	if db == nil {
 		log.Fatal("oops there was ans error")
 	}
@@ -40,7 +37,6 @@ func GetUsers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-
 	w.Write(jsonData)
 }
 
@@ -98,22 +94,17 @@ func SingUp(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fmt.Println("error occured while calling json marshal")
 	}
-
 	w.Write(jsonData)
-
 	fmt.Println("request body", user)
 }
 
 func LoginIn(w http.ResponseWriter, r *http.Request) {
 	var body utils.User
-
 	err := json.NewDecoder(r.Body).Decode(&body)
 	if err != nil {
 		log.Fatal("ther was an error", err)
 	}
-
 	user := getUserByEmail(body.Email, w)
-
 	isPasswordMatch := doPasswordsMatch(user.MasterPassword, body.MasterPassword)
 
 	if isPasswordMatch {
@@ -125,7 +116,6 @@ func LoginIn(w http.ResponseWriter, r *http.Request) {
 		}
 
 		userToken := USERTOKEN{ACCESS_TOKEN: token}
-
 		userTokenJSON, err := json.Marshal(userToken)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -133,7 +123,6 @@ func LoginIn(w http.ResponseWriter, r *http.Request) {
 		}
 
 		w.Write(userTokenJSON)
-
 		return
 	}
 	errorMessage := ERROR{Message: "password not match"}
@@ -142,7 +131,6 @@ func LoginIn(w http.ResponseWriter, r *http.Request) {
 	jsonData, err := json.Marshal(errorMessage)
 	if err != nil {
 		w.Write(jsonData)
-
 	}
 	w.Write(jsonData)
 }
@@ -152,7 +140,6 @@ func hashPassword(password string) (string, error) {
 	hashedPasswordBytes, err := bcrypt.GenerateFromPassword(passwordBytes, bcrypt.MinCost)
 	return string(hashedPasswordBytes), err
 }
-
 func doPasswordsMatch(hashedPassword, currentPassword string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(currentPassword))
 	return err == nil
@@ -160,17 +147,13 @@ func doPasswordsMatch(hashedPassword, currentPassword string) bool {
 
 func getUserByEmail(email string, w http.ResponseWriter) utils.User {
 	db := utils.DB
-
 	if db == nil {
 		log.Fatal("oops there was ans error")
 	}
-
 	var user utils.User
 	result := db.Where("Email = ?", email).First(&user)
-
 	if result.Error != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
-
 	return user
 }

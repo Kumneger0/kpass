@@ -32,12 +32,10 @@ export const loginSchema = z.object({
 	email: z.string().email().regex(emailRegExp, { message: "Invalid email" }),
 	masterPassword: z.string().min(6).max(20)
 })
-
 export const userStore = create<UserStore>((set) => ({
 	user: null,
 	setUser: (user: User | null) => set(() => ({ user }))
 }))
-
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs))
 }
