@@ -5,7 +5,7 @@ Kpass empowers you to manage your passwords securely, eliminating reliance on th
 -   **Backend:** Go
 -   **Frontend (Chrome Extension):** Typescript and Plasmo
 
-This guide provides a road-map for getting started with [Project Name], allowing you to:
+This guide provides a road-map for getting started with kpass, allowing you to:
 
 -   Set up your development environment.
 -   Develop the Chrome extension for managing passwords within your browser.
