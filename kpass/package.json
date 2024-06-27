@@ -1,7 +1,7 @@
 {
 	"name": "kpass",
 	"displayName": "Kpass",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "privacy first password manager",
 	"author": "kumnegerwondimu",
 	"scripts": {
