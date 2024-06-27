@@ -35,7 +35,7 @@ To get started with the self-hosted kpass password manager, follow these steps:
     
     - Create an account and start using kpass.
 
-In case you face any issues, feel free to raise an issue on our [GitHub page](https://github.com/Kumneger0/kpass/issues).
+In case you face any issues, feel free to raise an [issue](https://github.com/Kumneger0/kpass/issues).
 
 **Want to Contribute?**
 If you'd like to contribute code, documentation, or other improvements, please refer to our detailed guidelines in the [**CONTRIBUTING.md**](https://www.notion.so/CONTRIBUTING.md) file
