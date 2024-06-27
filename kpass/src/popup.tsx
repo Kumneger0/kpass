@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useEffect, useRef, useState } from "react"
+import React, { useContext, useEffect, useRef, useState } from "react"
 
+import logo from "../assets/icon.png"
 import { loginSchema, signupSchema, storage } from "./utils"
 
 import "./style.css"
@@ -23,7 +24,7 @@ const App = () => {
 	const inputRef = useRef<HTMLInputElement>(null)
 	const errorRef = useRef<HTMLSpanElement>(null)
 	useEffect(() => {
-		storage.get("base-url").then((baseURL : string) => setBaseURL(baseURL))
+		storage.get("base-url").then((baseURL) => setBaseURL(baseURL as string))
 	}, [])
 
 	if (!baseURL)
@@ -80,22 +81,25 @@ const App = () => {
 		</KapssContext.Provider>
 	)
 }
+
 export default App
 function IndexPopup() {
 	const [accessToken, setAcessToken] = useState<string | null | undefined>("")
-	const { isLogin } = useKpassContext()
+	const { isLogin, setIsLogin } = useKpassContext()
 	useEffect(() => {
 		storage.get("accessToken").then(setAcessToken)
-	}, [])
+	}, [isLogin])
+
 	if (!!accessToken)
 		return (
-			<div className="w-full max-w-sm p-4 bg-white">
+			<div key={accessToken} className="w-full max-w-sm p-4 bg-white">
 				<div className="flex items-center justify-end mt-10">
 					{" "}
 					{accessToken && (
 						<Button
-							onClick={() => {
-								storage.remove("accessToken")
+							onClick={async () => {
+								await storage.remove("accessToken")
+								setIsLogin && setIsLogin(true)
 							}}
 							variant="destructive">
 							Logout
@@ -116,22 +120,18 @@ function IndexPopup() {
 				</div>
 			</div>
 		)
-
 	if (isLogin) return <Login />
-
 	return <SignUP />
 }
 
 function SignUP() {
 	const formRef = React.useRef<HTMLFormElement>(null)
-	const [error, setIsError] = React.useState<string | null>(null)
-	const [isLoading, setIsLoading] = React.useState(false)
-	const [showPassWord, setShowPassword] = React.useState(false)
-	const { isPending, mutateAsync } = createUser()
+	const { isPending, mutateAsync, isError, error } = createUser()
 	const { setIsLogin } = useKpassContext()
+	const passwordRef = useRef<HTMLInputElement>(null)
+
 	async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
 		e.preventDefault()
-		setIsLoading(true)
 		if (!formRef.current) return
 		const formData = new FormData(formRef.current)
 		const body = {
@@ -146,32 +146,27 @@ function SignUP() {
 				setIsLogin && setIsLogin(true)
 				return
 			}
-			setIsError(result?.data.message)
 		} catch (err) {
 			if (err instanceof Error) {
-				setIsError(err.message)
-			}
-			if (err instanceof z.ZodError) {
-				setIsError(err.errors[0].message)
+				throw new Error(err.message)
 			}
 		}
-		setIsLoading(false)
 	}
 
-	if (isLoading) {
+	if (isPending) {
 		return <div>loading</div>
 	}
 
 	return (
 		<section className="bg-gray-50 dark:bg-gray-900">
-			{error && <div className="my-3 p-3 text-lg text-red-600 border">{error}</div>}
+			{isError && <div className="my-3 p-3 text-lg text-red-600 border">{error.message}</div>}
 			<div className="flex flex-col items-center justify-center px-6 py-8 mx-auto lg:py-0">
 				<a
 					href="#"
 					className="flex items-center mb-6 text-2xl font-semibold text-gray-900 dark:text-white">
 					<img
-						className="w-20 h-20 rounded-[999999999px] mr-2"
-						src="https://picsum.photos/200/300"
+						className="w-20 h-20 object-cover object-center rounded-[999999999px] mr-2"
+						src={logo}
 						alt="logo"
 					/>
 					KPass
@@ -208,7 +203,8 @@ function SignUP() {
 									Master Password
 								</label>
 								<input
-									type={showPassWord ? "text" : "password"}
+									type="password"
+									ref={passwordRef}
 									name="masterPassword"
 									id="password"
 									placeholder="password"
@@ -216,10 +212,13 @@ function SignUP() {
 									required
 								/>
 								<button
-									className="absolute inset-y-0 top-5 right-0 flex items-center pr-2 pointer-events-none"
+									className="absolute inset-y-0 top-5 right-0 z-[9999] hover:cursor-pointer flex items-center pr-2 pointer-events-none"
 									type="button"
-									onClick={() => setShowPassword((prv) => !prv)}>
-									e
+									onClick={() => {
+										const isPassword = passwordRef.current?.type == "password"
+										passwordRef.current!.type = isPassword ? "text" : "password"
+									}}>
+									{passwordRef.current?.type == "password" ? <EyeOn /> : <EyeOff />}
 								</button>
 							</div>
 
@@ -235,7 +234,7 @@ function SignUP() {
 								</div>
 								<div className="ml-3 text-sm">
 									<label htmlFor="terms" className="font-light text-gray-500 dark:text-gray-300">
-										I accept the{" "}
+										I accept the
 										<a
 											className="font-medium text-primary-600 hover:underline dark:text-primary-500"
 											href="#">
@@ -266,6 +265,46 @@ function SignUP() {
 	)
 }
 
+function EyeOn() {
+	return (
+		<svg
+			xmlns="http://www.w3.org/2000/svg"
+			width="24"
+			height="24"
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			stroke-width="2"
+			stroke-linecap="round"
+			stroke-linejoin="round"
+			className="lucide lucide-eye">
+			<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+			<circle cx="12" cy="12" r="3" />
+		</svg>
+	)
+}
+
+function EyeOff() {
+	return (
+		<svg
+			xmlns="http://www.w3.org/2000/svg"
+			width="24"
+			height="24"
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			stroke-width="2"
+			stroke-linecap="round"
+			stroke-linejoin="round"
+			className="lucide lucide-eye-off">
+			<path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+			<path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
+			<path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
+			<line x1="2" x2="22" y1="2" y2="22" />
+		</svg>
+	)
+}
+
 async function LoginUser(user: Partial<z.infer<typeof signupSchema>>, BASEURL: string) {
 	const loginURL = `${BASEURL}/users/login`
 	const response = await fetch(loginURL, {
@@ -289,17 +328,13 @@ async function LoginUser(user: Partial<z.infer<typeof signupSchema>>, BASEURL: s
 
 function Login() {
 	const formRef = React.useRef<HTMLFormElement>(null)
-	const [error, setIsError] = React.useState<string | null>(null)
-	const [isLoading, setIsLoading] = React.useState(false)
 	const { setIsLogin, baseURL } = useContext(KapssContext)
-
 	const queryClient = useQueryClient()
-
-	const { isPending, mutateAsync } = useMutation({
+	const { isPending, mutateAsync, isError, error } = useMutation({
 		onSuccess: () => {
 			queryClient.invalidateQueries()
 		},
-		mutationKey: ["signup"],
+		mutationKey: ["login"],
 		mutationFn: (data: Partial<z.infer<typeof signupSchema>>) => {
 			return LoginUser(data, baseURL)
 		}
@@ -307,43 +342,36 @@ function Login() {
 
 	async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
 		e.preventDefault()
-		setIsLoading(true)
 		if (!formRef.current) return
 		const formData = new FormData(formRef.current)
 		const body = {
 			email: formData.get("email"),
 			masterPassword: formData.get("masterPassword")
 		}
-
 		try {
 			const data = loginSchema.parse(body)
 			const result = await mutateAsync(data)
 			if (result?.status === "success") {
-				storage.set("accessToken", result.data.accessToken)
+				await storage.set("accessToken", result.data.accessToken)
+				setIsLogin && setIsLogin(false)
 				return
 			}
-			setIsError(result?.data.message)
 		} catch (err) {
 			if (err instanceof Error) {
-				setIsError(err.message)
-			}
-			if (err instanceof z.ZodError) {
-				setIsError(err.errors[0].message)
+				throw new Error(err.message)
 			}
 		}
-		setIsLoading(false)
 	}
 
-	if (isLoading) return <div>loading</div>
+	if (isPending) return <div>loading...</div>
 
 	return (
 		<div className="w-full bg-white rounded-lg shadow dark:border md:mt-0 sm:max-w-md xl:p-0 dark:bg-gray-800 dark:border-gray-700">
-			{error && <div className="my-3 p-3 text-lg text-red-600 border">{error}</div>}
+			{isError && <div className="my-3 p-3 text-lg text-red-600 border">{error.message}</div>}
 			<div className="p-6 space-y-4 md:space-y-6 sm:p-8">
 				<h1 className="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl dark:text-white">
 					Login
 				</h1>
-
 				<form onSubmit={handleSubmit} ref={formRef} className="space-y-4 md:space-y-6">
 					<div>
 						<label

@@ -11,11 +11,11 @@ import React, { useState } from "react"
 
 import { Button } from "~components/button"
 // import { isInKey } from "~contents/content"
-import { storage } from "~popup"
+import { storage } from "~utils"
 
 import { Card, CardContent, CardHeader, CardTitle } from "../components/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/Select"
-import { type Password } from "../utils"
+import { type Password } from "../types"
 import { saveNewPassword } from "./home"
 
 export function isInKey<Tobj extends object>(obj: Tobj, key: PropertyKey): key is keyof Tobj {
@@ -49,7 +49,6 @@ function Import({ onCSVInput }: { onCSVInput: (passwords: Papa.ParseResult<unkno
 	)
 }
 
-// export default Import
 
 type Managers = Readonly<"google-chrome" | "dashlane" | "1password" | "lastpass">
 type Steps = {

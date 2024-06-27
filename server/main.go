@@ -1,4 +1,5 @@
 package main
+
 import (
 	"fmt"
 	"github.com/joho/godotenv"
@@ -27,9 +28,7 @@ func main() {
 	fmt.Println("server running on port ", 8080)
 
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-
-		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte("404 page not found"))
+		w.Write([]byte("kpass server"))
 	})
 
 	handler := cors.AllowAll().Handler(mux)

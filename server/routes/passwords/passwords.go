@@ -22,20 +22,16 @@ func GetPasswords(w http.ResponseWriter, r *http.Request) {
 	token := r.Header.Get("ACCESS_TOKEN")
 
 	userId, err := utils.VerifyToken(token)
-	fmt.Println("userid ", userId)
 
 	if err != nil {
-		error := users.ERROR{Message: err.Error(), IsError: true}
+		error := users.ERROR{Message: "Invalid Token", IsError: true}
 		jsonData, _ := json.Marshal(error)
-		w.WriteHeader(http.StatusInternalServerError)
 		w.Write(jsonData)
 		return
 	}
 
 	var user = getUserByid(int(userId), w)
-
 	userInJson, err := json.Marshal(user)
-
 	if err != nil {
 		error := users.ERROR{Message: err.Error()}
 		jsonData, _ := json.Marshal(error)
@@ -43,13 +39,10 @@ func GetPasswords(w http.ResponseWriter, r *http.Request) {
 		w.Write(jsonData)
 		return
 	}
-
 	w.Write(userInJson)
 }
 func NewPassword(w http.ResponseWriter, r *http.Request) {
-
 	db := utils.DB
-
 	if db == nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		error := users.ERROR{Message: "internal server error"}
@@ -64,9 +57,8 @@ func NewPassword(w http.ResponseWriter, r *http.Request) {
 	userId, err := utils.VerifyToken(token)
 
 	if err != nil {
-		error := users.ERROR{Message: err.Error()}
+		error := users.ERROR{Message: "Invalid Token", IsError: true}
 		jsonData, _ := json.Marshal(error)
-		w.WriteHeader(http.StatusInternalServerError)
 		w.Write(jsonData)
 		return
 	}
@@ -132,10 +124,9 @@ func UpdatePassword(w http.ResponseWriter, r *http.Request) {
 	token := r.Header.Get("ACCESS_TOKEN")
 
 	if _, err := utils.VerifyToken(token); err != nil {
-		error := users.ERROR{Message: err.Error()}
+		error := users.ERROR{Message: "Invalid Token", IsError: true}
 		jsonData, err := json.Marshal(error)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte("failed to update password"))
 			return
 		}
@@ -202,13 +193,8 @@ func DeletePassword(w http.ResponseWriter, r *http.Request) {
 	token := r.Header.Get("ACCESS_TOKEN")
 
 	if _, err := utils.VerifyToken(token); err != nil {
-		error := users.ERROR{Message: err.Error()}
-		jsonData, err := json.Marshal(error)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte("failed to update password"))
-			return
-		}
+		error := users.ERROR{Message: "Invalid Token", IsError: true}
+		jsonData, _ := json.Marshal(error)
 		w.Write(jsonData)
 		return
 	}
@@ -245,13 +231,11 @@ func getUserByid(id int, w http.ResponseWriter) utils.User {
 	}
 
 	var user utils.User
-
 	result := db.Model(&utils.User{}).Preload("Passwords").First(&user, id)
 
 	if result.Error != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
-
 	return user
 }
 
@@ -261,14 +245,12 @@ func getPasswordById(id int, w http.ResponseWriter) utils.Password {
 	if db == nil {
 		log.Fatal("oops there was ans error")
 	}
-
 	var password utils.Password
 	result := db.Model(&utils.Password{}).First(&password, id)
 
 	if result.Error != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
-
 	return password
 
 }

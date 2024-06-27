@@ -15,7 +15,7 @@ import React, { useRef, useState, type Dispatch, type SetStateAction } from "rea
 import { z, ZodError } from "zod"
 
 import type { AccessToken, Password, User } from "~types"
-import { storage } from "~utils"
+import { getUserData, storage } from "~utils"
 
 import { Dialog, DialogContent, DialogTrigger } from "../components/dialog"
 import { deletePassword, updatePassword, type UpdateParams } from "./savePassword"
@@ -33,24 +33,9 @@ const Home = () => {
 
 export default Home
 
-export const getUserData = async (accessToken: string | null) => {
-	const BASEURL = await storage.get("base-url")
-	if (!BASEURL) throw new Error("Failed to get server url")
-	const url = `${BASEURL}/passwords`
-	console.log("url", url)
-	if (!accessToken) throw Error("please specify access token")
-	const response = await fetch(url, { headers: { ACCESS_TOKEN: accessToken } })
-
-	const data = (await response?.json()) as User
-	console.log("passowrds", data)
-	return data
-}
 function Component() {
 	const [search, setSearch] = useState<string | null>(null)
-	const { data } = useQuery({
-		queryKey: ["testKey"],
-		queryFn: async () => await storage.get("accessToken")
-	})
+	
 	const {
 		isPending,
 		error,
@@ -65,8 +50,8 @@ function Component() {
 	if (error) return "An error has occurred: " + error.message
 
 	const filltedPassWords = search
-		? user.passwords.filter(({ url }) => url.toLowerCase().includes(search.toLowerCase()))
-		: user.passwords
+		? user?.passwords.filter(({ url }) => url.toLowerCase().includes(search.toLowerCase()))
+		: user?.passwords
 
 	return (
 		<div className="grid md:grid-cols-2 gap-4 items-start max-w-5xl mx-auto px-4">
@@ -78,7 +63,6 @@ function Component() {
 				<div>
 					<Search search={search} setSearch={setSearch} />
 				</div>
-				<div>{data && data}</div>
 				<div className="space-y-4">
 					<div className="grid grid-cols-2 items-center">
 						<h2 className="font-semibold">Total Passwords</h2>

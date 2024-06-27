@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-quer
 import React, { useRef, type ElementRef } from "react"
 
 import type { User } from "~types"
-import { storage } from "~utils"
+import { getUserData, storage } from "~utils"
 
 //@ts-ignore
 import img from "../../assets/icon.png"
@@ -10,20 +10,7 @@ import { Button } from "../components/button"
 import { Popover, PopoverContent, PopoverTrigger } from "../components/popover"
 
 const queryClient = new QueryClient()
-export const getUserData = async (accessToken: string | null) => {
-	const BASEURL = await storage.get("base-url")
-	if (!BASEURL) throw new Error("Failed to get server url")
-	const url = `${BASEURL}/passwords`
 
-	if (!accessToken) throw Error("please specify access token")
-	const response = await fetch(url, {
-		headers: {
-			ACCESS_TOKEN: accessToken
-		}
-	})
-	const data = (await response?.json()) as User
-	return data
-}
 const popoverContentStyle = {
 	padding: "10px", // Add some padding for aesthetics
 	backgroundColor: "#333", // Set a dark background color
@@ -66,12 +53,16 @@ export function PopoverDemo({ onSelect }: { onSelect: (pass: User["passwords"][n
 		<Popover>
 			{" "}
 			<PopoverTrigger ref={popOverTriggerRef} asChild>
-				<img style={kpassLogoStyles} src={img} alt="kpass_logo" />
+				<img
+					style={{ ...kpassLogoStyles, opacity: user === null ? "0.5" : "1" }}
+					src={img}
+					alt="kpass_logo"
+				/>
 			</PopoverTrigger>
 			<PopoverContent style={popoverContentStyle}>
 				{isPending ? (
 					<>
-						<div>please wait ....</div>
+						<div>please wait ....</div>{" "}
 					</>
 				) : (
 					passwords?.map((pass) => {
@@ -107,6 +98,7 @@ export function PopoverDemo({ onSelect }: { onSelect: (pass: User["passwords"][n
 						)
 					})
 				)}
+				{!passwords.length && <div>no saved passowrds available for this site</div>}
 			</PopoverContent>
 		</Popover>
 	)

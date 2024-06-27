@@ -13,16 +13,6 @@ chrome.runtime.onMessage.addListener(function (
 		console.log(err)
 	}
 	openMiniWindow()
-	// chrome.action
-	// 	.openPopup()
-	// 	.then(() => {
-	// 		sendResponse({ status: "popup opned" })
-	// 		openMiniWindow()
-	// 	})
-	// 	.catch((err) => {
-	// 		sendResponse({ status: "failed to open" })
-	// 		openMiniWindow()
-	// 	})
 })
 
 function openMiniWindow() {

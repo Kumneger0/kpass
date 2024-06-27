@@ -78,13 +78,17 @@ document.onsubmit = async (e) => {
 				}
 			}
 		})
-		const result = passwordSchema.parse(formValue)
+		passwordSchema.parse(formValue)
 		await storage.set("credential", formValue)
-		chrome.runtime.sendMessage({ message: "setTopic", data: Credential }, function (response) {
-			console.log("response", response)
-		})
 	} catch (err) {
-		console.log(err)
+		const currentCredential: Partial<typeof formValue> = {
+			url: location.origin,
+			email: formValue?.email ?? " ",
+			password: formValue.password ?? " ",
+			phoneNumber: formValue.phoneNumber ?? " ",
+			username: formValue.phoneNumber ?? " "
+		}
+		await storage.set("credential", currentCredential)
 		if (err instanceof Error) {
 			console.log(err.message)
 		}
@@ -92,6 +96,9 @@ document.onsubmit = async (e) => {
 			console.log(err.errors[0].message)
 		}
 	}
+	chrome.runtime.sendMessage({ message: "setTopic", data: Credential }, function (response) {
+		console.log("response", response)
+	})
 }
 const getSubmittedUserInputs = () => {
 	const formValue = {
