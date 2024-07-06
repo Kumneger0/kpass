@@ -6,6 +6,7 @@ import (
 	"github.com/rs/cors"
 	"log"
 	"net/http"
+	"server/routes/home"
 	"server/routes/passwords"
 	"server/routes/users"
 )
@@ -26,11 +27,7 @@ func main() {
 	mux.HandleFunc("PUT /passwords/update/{id}", passwords.UpdatePassword)
 	mux.HandleFunc("DELETE /passwords/delete/{id}", passwords.DeletePassword)
 	fmt.Println("server running on port ", 8080)
-
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("kpass server"))
-	})
-
+	mux.HandleFunc("/", home.Home)
 	handler := cors.AllowAll().Handler(mux)
 	log.Fatal(http.ListenAndServe(":8080", handler))
 
