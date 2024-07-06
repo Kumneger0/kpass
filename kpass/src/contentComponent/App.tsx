@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query"
-import React, { useRef, type ElementRef } from "react"
+import React, { useLayoutEffect, useRef, type ElementRef } from "react"
 
 import type { User } from "~types"
 import { getUserData, storage } from "~utils"
@@ -103,8 +103,13 @@ export function PopoverDemo({ onSelect }: { onSelect: (pass: User["passwords"][n
 		</Popover>
 	)
 }
-
-export default function App({ elements }: { elements: HTMLInputElement[] }) {
+export default function App({
+	elements,
+	element
+}: {
+	elements: HTMLInputElement[]
+	element: HTMLElement
+}) {
 	function onSelect(password: User["passwords"][number]) {
 		for (const element of elements) {
 			if (element.type == "password") {
@@ -118,10 +123,21 @@ export default function App({ elements }: { elements: HTMLInputElement[] }) {
 			element.value = password.email ?? password.phoneNumber
 		}
 	}
+	const randomUniqueID = crypto.randomUUID()
+	useLayoutEffect(() => {
+		element?.setAttribute("list", randomUniqueID)
+	}, [])
 
 	return (
 		<QueryClientProvider client={queryClient}>
 			<PopoverDemo onSelect={onSelect} />
+			<datalist id={randomUniqueID}>
+				<option value="Chocolate"></option>
+				<option value="Coconut"></option>
+				<option value="Mint"></option>
+				<option value="Strawberry"></option>
+				<option value="Vanilla"></option>
+			</datalist>
 		</QueryClientProvider>
 	)
 }

@@ -136,7 +136,7 @@ function IndexOptions() {
 				<h1 className="text-xl font-bold mb-4">
 					{!!previousPassword?.length && <span>Your other passwords on {credential.url}</span>}
 				</h1>
-				{previousPassword?.map(({ email, ID, password, phoneNumber }) => {
+				{previousPassword?.map(({ email, ID, password }) => {
 					return (
 						<div className="flex justify-center items-center mb-4">
 							<div className="flex justify-between items-center border-b border-gray-200 py-2 w-full">
@@ -184,7 +184,11 @@ function IndexOptions() {
 					</div>
 					<div className="mr-2">
 						<Button
-							onClick={async () => await mutateAsync({})}
+							onClick={async () => {
+								await mutateAsync({})
+								window.close()
+								await storage.remove("credential")
+							}}
 							variant="default"
 							className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
 							save as new
@@ -201,6 +205,8 @@ function IndexOptions() {
 											accessToken: accessToken!,
 											body: credential
 										})
+										window.close()
+                    await storage.remove("credential")
 									}
 								}}
 								className={`bg-green-500 p-2  text-white font-bold py-2 px-4 rounded ${!selectedId ? "opacity-50 cursor-not-allowed" : "hover:bg-green-700"}`}>
